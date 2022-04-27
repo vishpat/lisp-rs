@@ -4,6 +4,11 @@ use std::fmt;
 pub enum Token {
     Number(i64),
     Symbol(String),
+    Define,
+    Plus,
+    Minus,
+    Multiply,
+    Divide,
     LParen,
     RParen,
 }
@@ -13,6 +18,11 @@ impl fmt::Display for Token {
         match self {
             Token::Number(n) => write!(f, "{}", n),
             Token::Symbol(s) => write!(f, "{}", s),
+            Token::Define => write!(f, "define"),
+            Token::Plus => write!(f, "+"),
+            Token::Minus => write!(f, "-"),
+            Token::Multiply => write!(f, "*"),
+            Token::Divide => write!(f, "/"),
             Token::LParen => write!(f, "("),
             Token::RParen => write!(f, ")"),
         }
@@ -35,15 +45,19 @@ impl fmt::Display for TokenError {
     }
 }
 
-pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError>
-{
-    let program2 = program.replace("(", " ( ").replace(")", " ) "); 
+pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
+    let program2 = program.replace("(", " ( ").replace(")", " ) ");
     let words = program2.split_whitespace();
     let mut tokens: Vec<Token> = Vec::new();
     for word in words {
         match word {
             "(" => tokens.push(Token::LParen),
             ")" => tokens.push(Token::RParen),
+            "define" => tokens.push(Token::Define),
+            "+" => tokens.push(Token::Plus),
+            "-" => tokens.push(Token::Minus),
+            "*" => tokens.push(Token::Multiply),
+            "/" => tokens.push(Token::Divide),
             _ => {
                 let mut chars = word.chars();
                 let first_char = chars.next().unwrap();
@@ -61,4 +75,3 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError>
     }
     Ok(tokens)
 }
-
