@@ -2,7 +2,8 @@ use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
-    Number(i64),
+    Integer(i64),
+    Float(f64),
     Symbol(String),
     Define,
     Plus,
@@ -16,7 +17,8 @@ pub enum Token {
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Token::Number(n) => write!(f, "{}", n),
+            Token::Float(n) => write!(f, "{}", n),
+            Token::Integer(n) => write!(f, "{}", n),
             Token::Symbol(s) => write!(f, "{}", s),
             Token::Define => write!(f, "define"),
             Token::Plus => write!(f, "+"),
@@ -31,12 +33,6 @@ impl fmt::Display for Token {
 
 pub struct TokenError {
     ch: char,
-}
-
-impl TokenError {
-    pub fn new(ch: char) -> TokenError {
-        TokenError { ch }
-    }
 }
 
 impl fmt::Display for TokenError {
@@ -61,12 +57,12 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
             _ => {
                 let mut chars = word.chars();
                 let first_char = chars.next().unwrap();
-                if first_char.is_digit(10) {
-                    let num = word.parse::<i64>();
-                    if num.is_err() {
-                        return Err(TokenError::new(first_char));
-                    }
-                    tokens.push(Token::Number(num.unwrap()));
+                if first_char.is_digit(10) && word.contains(".") {
+                    let float = word.parse::<f64>().unwrap();
+                    tokens.push(Token::Float(float));
+                } else if first_char.is_digit(10) {
+                    let integer = word.parse::<i64>().unwrap();
+                    tokens.push(Token::Integer(integer));
                 } else {
                     tokens.push(Token::Symbol(word.to_string()));
                 }
@@ -74,4 +70,53 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
         }
     }
     Ok(tokens)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_add() {
+        let tokens = tokenize("(+ 1 2)").unwrap_or(vec![]);
+        assert_eq!(
+            tokens,
+            vec![
+                Token::LParen,
+                Token::Plus,
+                Token::Integer(1),
+                Token::Integer(2),
+                Token::RParen,
+            ]
+        );
+    }
+
+    #[test]
+    fn test_area_of_a_circle() {
+        let tokens = tokenize("(define r 10)(define pi 3.14)(* pi (* r r))").unwrap_or(vec![]);
+        assert_eq!(
+            tokens,
+            vec![
+                Token::LParen,
+                Token::Define,
+                Token::Symbol("r".to_string()),
+                Token::Integer(10),
+                Token::RParen,
+                Token::LParen,
+                Token::Define,
+                Token::Symbol("pi".to_string()),
+                Token::Float(3.14),
+                Token::RParen,
+                Token::LParen,
+                Token::Multiply,
+                Token::Symbol("pi".to_string()),
+                Token::LParen,
+                Token::Multiply,
+                Token::Symbol("r".to_string()),
+                Token::Symbol("r".to_string()),
+                Token::RParen,
+                Token::RParen
+            ]
+        );
+    }
 }
