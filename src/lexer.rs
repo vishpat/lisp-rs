@@ -6,6 +6,7 @@ pub enum Token {
     Float(f64),
     Symbol(String),
     Define,
+    Begin,
     Plus,
     Minus,
     Multiply,
@@ -20,6 +21,7 @@ impl fmt::Display for Token {
             Token::Float(n) => write!(f, "{}", n),
             Token::Integer(n) => write!(f, "{}", n),
             Token::Symbol(s) => write!(f, "{}", s),
+            Token::Begin => write!(f, "begin"),
             Token::Define => write!(f, "define"),
             Token::Plus => write!(f, "+"),
             Token::Minus => write!(f, "-"),
@@ -50,6 +52,7 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
             "(" => tokens.push(Token::LParen),
             ")" => tokens.push(Token::RParen),
             "define" => tokens.push(Token::Define),
+            "begin" => tokens.push(Token::Begin),
             "+" => tokens.push(Token::Plus),
             "-" => tokens.push(Token::Minus),
             "*" => tokens.push(Token::Multiply),
@@ -93,10 +96,13 @@ mod tests {
 
     #[test]
     fn test_area_of_a_circle() {
-        let tokens = tokenize("(define r 10)(define pi 3.14)(* pi (* r r))").unwrap_or(vec![]);
+        let tokens =
+            tokenize("(begin (define r 10)(define pi 3.14)(* pi (* r r)))").unwrap_or(vec![]);
         assert_eq!(
             tokens,
             vec![
+                Token::LParen,
+                Token::Begin,
                 Token::LParen,
                 Token::Define,
                 Token::Symbol("r".to_string()),
@@ -114,6 +120,7 @@ mod tests {
                 Token::Multiply,
                 Token::Symbol("r".to_string()),
                 Token::Symbol("r".to_string()),
+                Token::RParen,
                 Token::RParen,
                 Token::RParen
             ]
