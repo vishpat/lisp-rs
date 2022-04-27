@@ -1,3 +1,8 @@
+mod lexer;
+
 fn main() {
-    println!("Hello, world!");
+    let tokens = lexer::tokenize("(define rx1 (+ 1 2))").unwrap_or(vec![]);
+    for token in tokens {
+        println!("{}", token);
+    }
 }
