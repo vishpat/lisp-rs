@@ -1,4 +1,5 @@
 use std::fmt;
+use std::error::Error;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
@@ -13,6 +14,7 @@ pub enum Token {
     Divide,
     LParen,
     RParen,
+    Invalid,
 }
 
 impl fmt::Display for Token {
@@ -29,13 +31,17 @@ impl fmt::Display for Token {
             Token::Divide => write!(f, "/"),
             Token::LParen => write!(f, "("),
             Token::RParen => write!(f, ")"),
+            Token::Invalid => write!(f, "invalid"),
         }
     }
 }
 
+#[derive(Debug)]
 pub struct TokenError {
     ch: char,
 }
+
+impl Error for TokenError {}
 
 impl fmt::Display for TokenError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
