@@ -3,8 +3,7 @@ mod object;
 mod parser;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let tokens = lexer::tokenize("(define rx1 (+ 1 2))")?;
-    let parsed_list = parser::parse_list(&mut tokens.into_iter().rev().collect())?;
+    let parsed_list = parser::parse("(begin (define x 1) (define y 2) (+ x y))")?;
     println!("{:?}", parsed_list);
     Ok(())
 }

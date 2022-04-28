@@ -8,7 +8,6 @@ pub enum Token {
     Symbol(String),
     LParen,
     RParen,
-    Invalid,
 }
 
 impl fmt::Display for Token {
@@ -19,7 +18,6 @@ impl fmt::Display for Token {
             Token::Symbol(s) => write!(f, "{}", s),
             Token::LParen => write!(f, "("),
             Token::RParen => write!(f, ")"),
-            Token::Invalid => write!(f, "invalid"),
         }
     }
 }

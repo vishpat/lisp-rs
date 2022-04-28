@@ -5,26 +5,35 @@ use std::fmt;
 
 #[derive(Debug)]
 pub struct ParseError {
-    token: Token,
+    err: String,
 }
 
 impl fmt::Display for ParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "unexpected token: {}", self.token)
+        write!(f, "Parse error: {}", self.err)
     }
 }
 
 impl Error for ParseError {}
 
-pub fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
+pub fn parse(program: &str) -> Result<Object, ParseError> {
+    let token_result = tokenize(program);
+    if token_result.is_err() {
+        return Err(ParseError {
+            err: format!("{}", token_result.err().unwrap()),
+        });
+    }
+
+    let mut tokens = token_result.unwrap().into_iter().rev().collect::<Vec<_>>();
+    let parsed_list = parse_list(&mut tokens)?;
+    Ok(parsed_list)
+}
+
+fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
     let token = tokens.pop();
     if token != Some(Token::LParen) {
-        println!(
-            "Did not find LParen, found {:?}, remaining tokens {:?}",
-            token, tokens
-        );
         return Err(ParseError {
-            token: token.unwrap(),
+            err: format!("Expected LParen, found {:?}", token),
         });
     }
 
@@ -32,9 +41,8 @@ pub fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
     while !tokens.is_empty() {
         let token = tokens.pop();
         if token == None {
-            println!("Did not find enough tokens");
             return Err(ParseError {
-                token: Token::Invalid,
+                err: format!("Did not find enough tokens"),
             });
         }
         let t = token.unwrap();
@@ -50,12 +58,6 @@ pub fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
             Token::RParen => {
                 return Ok(Object::List(list));
             }
-            _ => {
-                println!("Unexpected token {:?}", t);
-                return Err(ParseError {
-                    token: Token::Invalid,
-                });
-            }
         }
     }
 
@@ -68,8 +70,7 @@ mod tests {
 
     #[test]
     fn test_add() {
-        let mut tokens = tokenize("(+ 1 2)").unwrap_or(vec![]);
-        let list = parse_list(&mut tokens.into_iter().rev().collect()).unwrap();
+        let list = parse("(+ 1 2)").unwrap();
         assert_eq!(
             list,
             Object::List(vec![
@@ -82,9 +83,7 @@ mod tests {
 
     #[test]
     fn test_area_of_a_circle() {
-        let mut tokens =
-            tokenize("(begin (define r 10)(define pi 3.14)(* pi (* r r)))").unwrap_or(vec![]);
-        let list = parse_list(&mut tokens.into_iter().rev().collect()).unwrap();
+        let list = parse("(begin (define r 10)(define pi 3.14)(* pi (* r r)))").unwrap();
         assert_eq!(
             list,
             Object::List(vec![
