@@ -18,8 +18,7 @@ impl Error for ParseError {}
     
 
 
-pub fn parse_list(tokens: &mut Vec<Token>) -> Result<Vec<Object>, ParseError> {
-    println!("parse_list: {:?}", tokens);
+pub fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
 
     let token = tokens.pop();
     if token != Some(Token::LParen) {
@@ -46,10 +45,10 @@ pub fn parse_list(tokens: &mut Vec<Token>) -> Result<Vec<Object>, ParseError> {
             Token::LParen => {
                 tokens.push(Token::LParen);
                 let sub_list = parse_list( tokens)?;
-                list.push(Object::List(sub_list));
+                list.push(sub_list);
             }
             Token::RParen => {
-                return Ok(list);
+                return Ok(Object::List(list));
             }
             _ => {
                 println!("Unexpected token {:?}", t);
@@ -60,5 +59,5 @@ pub fn parse_list(tokens: &mut Vec<Token>) -> Result<Vec<Object>, ParseError> {
         }
     }
 
-    Ok(list)
+    Ok(Object::List(list))
 }
