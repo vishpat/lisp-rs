@@ -23,7 +23,7 @@ pub fn parse_list(tokens: &mut Vec<Token>) -> Result<Vec<Object>, ParseError> {
 
     let token = tokens.pop();
     if token != Some(Token::LParen) {
-        println!("Did not find LParen {:?}", token);
+        println!("Did not find LParen, found {:?}, remaining tokens {:?}", token, tokens);
         return Err(ParseError {
             token: token.unwrap(),
         });
@@ -33,18 +33,16 @@ pub fn parse_list(tokens: &mut Vec<Token>) -> Result<Vec<Object>, ParseError> {
     while !tokens.is_empty() {
         let token = tokens.pop();
         if token == None {
-            println!("Did not find token {:?}", token);
+            println!("Did not find enough tokens");
             return Err(ParseError {
                 token: Token::Invalid,
             });
         }
-        println!("token: {:?}", token);
         let t = token.unwrap();
         match t {
             Token::Integer(n) => list.push(Object::Integer(n)),
             Token::Float(n) => list.push(Object::Float(n)),
             Token::Symbol(s) => list.push(Object::Symbol(s)),
-            Token::Define => list.push(Object::Define),
             Token::LParen => {
                 tokens.push(Token::LParen);
                 let sub_list = parse_list( tokens)?;

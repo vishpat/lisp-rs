@@ -5,7 +5,6 @@ pub enum Object {
     Integer(i64),
     Float(f64),
     Symbol(String),
-    Define,
     List(Vec<Object>),
 }
 
@@ -15,7 +14,6 @@ impl fmt::Display for Object {
             Object::Integer(n) => write!(f, "{}", n),
             Object::Float(n) => write!(f, "{}", n),
             Object::Symbol(s) => write!(f, "{}", s),
-            Object::Define => write!(f, "define"),
             Object::List(list) => {
                 write!(f, "(")?;
                 for (i, obj) in list.iter().enumerate() {
