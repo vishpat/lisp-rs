@@ -2,6 +2,7 @@ use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Object {
+    Void,
     Integer(i64),
     Symbol(String),
     List(Vec<Object>),
@@ -10,6 +11,7 @@ pub enum Object {
 impl fmt::Display for Object {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
+            Object::Void => write!(f, "Void"),
             Object::Integer(n) => write!(f, "{}", n),
             Object::Symbol(s) => write!(f, "{}", s),
             Object::List(list) => {
