@@ -1,3 +1,5 @@
+mod env;
+mod eval;
 mod lexer;
 mod object;
 mod parser;
