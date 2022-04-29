@@ -4,7 +4,6 @@ use std::fmt;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Integer(i64),
-    Float(f64),
     Symbol(String),
     LParen,
     RParen,
@@ -13,7 +12,6 @@ pub enum Token {
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Token::Float(n) => write!(f, "{}", n),
             Token::Integer(n) => write!(f, "{}", n),
             Token::Symbol(s) => write!(f, "{}", s),
             Token::LParen => write!(f, "("),
@@ -46,10 +44,7 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
             _ => {
                 let mut chars = word.chars();
                 let first_char = chars.next().unwrap();
-                if first_char.is_digit(10) && word.contains(".") {
-                    let float = word.parse::<f64>().unwrap();
-                    tokens.push(Token::Float(float));
-                } else if first_char.is_digit(10) {
+                if first_char.is_digit(10) {
                     let integer = word.parse::<i64>().unwrap();
                     tokens.push(Token::Integer(integer));
                 } else {
@@ -83,7 +78,7 @@ mod tests {
     #[test]
     fn test_area_of_a_circle() {
         let tokens =
-            tokenize("(begin (define r 10)(define pi 3.14)(* pi (* r r)))").unwrap_or(vec![]);
+            tokenize("(begin (define r 10)(define pi 314)(* pi (* r r)))").unwrap_or(vec![]);
         assert_eq!(
             tokens,
             vec![
@@ -97,7 +92,7 @@ mod tests {
                 Token::LParen,
                 Token::Symbol("define".to_string()),
                 Token::Symbol("pi".to_string()),
-                Token::Float(3.14),
+                Token::Integer(314),
                 Token::RParen,
                 Token::LParen,
                 Token::Symbol("*".to_string()),
