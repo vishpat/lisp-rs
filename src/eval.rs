@@ -4,7 +4,7 @@ use crate::parser::*;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-fn eval_infix(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for infix operator"));
     }
@@ -25,6 +25,10 @@ fn eval_infix(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, 
             "-" => Ok(Object::Integer(left_val - right_val)),
             "*" => Ok(Object::Integer(left_val * right_val)),
             "/" => Ok(Object::Integer(left_val / right_val)),
+            "<" => Ok(Object::Bool(left_val < right_val)),
+            ">" => Ok(Object::Bool(left_val > right_val)),
+            "=" => Ok(Object::Bool(left_val == right_val)),
+            "!=" => Ok(Object::Bool(left_val != right_val)),
             _ => Err(format!("Invalid infix operator: {}", s)),
         },
         _ => Err(format!("Operator must be a symbol")),
@@ -35,6 +39,7 @@ fn eval_list(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String>
     match obj {
         Object::Void => Ok(Object::Void),
         Object::Lambda(_params, _body) => Ok(Object::Void),
+        Object::Bool(_) => Ok(obj.clone()),
         Object::Integer(n) => Ok(Object::Integer(*n)),
         Object::Symbol(s) => {
             let val = env.borrow_mut().get(s);
@@ -45,11 +50,10 @@ fn eval_list(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String>
         }
         Object::List(list) => {
             let head = &list[0];
-            println!("Evaluating list with head {:?}", head);
             match head {
                 Object::Symbol(s) => match s.as_str() {
-                    "+" | "-" | "*" | "/" => {
-                        return eval_infix(&list, env);
+                    "+" | "-" | "*" | "/" | "<" | ">" | "="| "!=" => {
+                        return eval_binary_op(&list, env);
                     }
                     "define" => {
                         let sym = match &list[1] {
@@ -59,6 +63,14 @@ fn eval_list(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String>
                         let val = eval_list(&list[2], env)?;
                         env.borrow_mut().set(&sym, val);
                         return Ok(Object::Void);
+                    }
+                    "if" => {
+                        let cond = eval_list(&list[1], env)?;
+                        if cond == Object::Bool(true) {
+                            return eval_list(&list[2], env);
+                        } else {
+                            return eval_list(&list[3], env);
+                        }
                     }
                     "lambda" => {
                         let params = match &list[1] {
@@ -88,7 +100,6 @@ fn eval_list(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String>
                         }
 
                         let func = lamdba.unwrap();
-                        println!("Found lamdba for {} {:?}", s, func);
                         match func {
                             Object::Lambda(params, body) => {
                                 let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
@@ -155,6 +166,23 @@ mod tests {
         assert_eq!(
             result,
             Object::List(vec![Object::Integer((10 * 10) as i64)])
+        );
+    }
+
+    #[test]
+    fn test_fibonaci() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+            (
+                (define fib (lambda (n) (if (< n 2) 1 (+ (fib (- n 1)) (fib (- n 2))))))
+                (fib 10)
+            )
+        ";
+        
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(vec![Object::Integer((89) as i64)])
         );
     }
 
