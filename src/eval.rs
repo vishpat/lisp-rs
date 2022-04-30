@@ -1,8 +1,10 @@
 use crate::env::*;
 use crate::object::*;
 use crate::parser::*;
+use std::cell::RefCell;
+use std::rc::Rc;
 
-fn eval_infix(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
+fn eval_infix(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for infix operator"));
     }
@@ -29,12 +31,13 @@ fn eval_infix(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     }
 }
 
-fn eval_list(obj: &Object, env: &mut Env) -> Result<Object, String> {
+fn eval_list(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     match obj {
         Object::Void => Ok(Object::Void),
+        Object::Lambda(_params, _body) => Ok(Object::Void),
         Object::Integer(n) => Ok(Object::Integer(*n)),
         Object::Symbol(s) => {
-            let val = env.get(s);
+            let val = env.borrow_mut().get(s);
             if val.is_none() {
                 return Err(format!("Unbound symbol: {}", s));
             }
@@ -54,11 +57,50 @@ fn eval_list(obj: &Object, env: &mut Env) -> Result<Object, String> {
                             _ => return Err(format!("Invalid define")),
                         };
                         let val = eval_list(&list[2], env)?;
-                        env.set(&sym, val);
+                        env.borrow_mut().set(&sym, val);
                         return Ok(Object::Void);
                     }
+                    "lambda" => {
+                        let params = match &list[1] {
+                            Object::List(list) => {
+                                let mut params = Vec::new();
+                                for param in list {
+                                    match param {
+                                        Object::Symbol(s) => params.push(s.clone()),
+                                        _ => return Err(format!("Invalid lambda parameter")),
+                                    }
+                                }
+                                params
+                            }
+                            _ => return Err(format!("Invalid lambda")),
+                        };
+
+                        let body = match &list[2] {
+                            Object::List(list) => list.clone(),
+                            _ => return Err(format!("Invalid lambda")),
+                        };
+                        return Ok(Object::Lambda(params, body));
+                    }
                     _ => {
-                        return Err(format!("Unknown symbol: {}", s));
+                        let lamdba = env.borrow_mut().get(s);
+                        if lamdba.is_none() {
+                            return Err(format!("Unbound symbol: {}", s));
+                        }
+
+                        let func = lamdba.unwrap();
+                        println!("Found lamdba for {} {:?}", s, func);
+                        match func {
+                            Object::Lambda(params, body) => {
+                                let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+                                for (i, param) in params.iter().enumerate() {
+                                    let val = eval_list(&list[i + 1], env)?;
+                                    new_env.borrow_mut().set(param, val);
+                                }
+                                let mut new_body = body.clone();
+                                return eval_list(&Object::List(new_body), &mut new_env);
+                            }
+                            _ => return Err(format!("Not a lambda: {}", s)),
+                        }
                     }
                 },
                 _ => {
@@ -77,7 +119,7 @@ fn eval_list(obj: &Object, env: &mut Env) -> Result<Object, String> {
     }
 }
 
-pub fn eval(program: &str, env: &mut Env) -> Result<Object, String> {
+pub fn eval(program: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let parsed_list = parse(program);
     if parsed_list.is_err() {
         return Err(format!("{}", parsed_list.err().unwrap()));
@@ -91,20 +133,28 @@ mod tests {
 
     #[test]
     fn test_simple_add() {
-        let result = eval("(+ 1 2)", &mut Env::new()).unwrap();
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(+ 1 2)", &mut env).unwrap();
         assert_eq!(result, Object::Integer(3));
     }
 
     #[test]
     fn test_area_of_a_circle() {
-        let result = eval(
-            "((define r 10) (define pi 314) (* pi (* r r)))",
-            &mut Env::new(),
-        )
-        .unwrap();
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("((define r 10) (define pi 314) (* pi (* r r)))", &mut env).unwrap();
         assert_eq!(
             result,
             Object::List(vec![Object::Integer((314 * 10 * 10) as i64)])
+        );
+    }
+
+    #[test]
+    fn test_sqr_function() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("((define sqr (lambda (r) (* r r))) (sqr 10))", &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(vec![Object::Integer((10 * 10) as i64)])
         );
     }
 }
