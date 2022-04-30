@@ -96,7 +96,7 @@ fn eval_list(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String>
                                     let val = eval_list(&list[i + 1], env)?;
                                     new_env.borrow_mut().set(param, val);
                                 }
-                                let mut new_body = body.clone();
+                                let new_body = body.clone();
                                 return eval_list(&Object::List(new_body), &mut new_env);
                             }
                             _ => return Err(format!("Not a lambda: {}", s)),
@@ -155,6 +155,26 @@ mod tests {
         assert_eq!(
             result,
             Object::List(vec![Object::Integer((10 * 10) as i64)])
+        );
+    }
+
+    #[test]
+    fn test_circle_area_function() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+            (
+                (define pi 314)
+                (define r 10)
+                (define sqr (lambda (r) (* r r)))
+                (define area (lambda (r) (* pi (sqr r))))
+                (area r)
+            )
+        ";
+        
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(vec![Object::Integer((314 * 10 * 10) as i64)])
         );
     }
 }
