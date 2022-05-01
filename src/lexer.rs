@@ -77,13 +77,19 @@ mod tests {
 
     #[test]
     fn test_area_of_a_circle() {
+        let program = "
+            (
+                (define r 10)
+                (define pi 314)
+                (* pi (* r r))
+            )
+        ";
         let tokens =
-            tokenize("(begin (define r 10)(define pi 314)(* pi (* r r)))").unwrap_or(vec![]);
+            tokenize(program).unwrap_or(vec![]);
         assert_eq!(
             tokens,
             vec![
                 Token::LParen,
-                Token::Symbol("begin".to_string()),
                 Token::LParen,
                 Token::Symbol("define".to_string()),
                 Token::Symbol("r".to_string()),

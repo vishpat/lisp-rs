@@ -152,7 +152,12 @@ mod tests {
     #[test]
     fn test_area_of_a_circle() {
         let mut env = Rc::new(RefCell::new(Env::new()));
-        let result = eval("((define r 10) (define pi 314) (* pi (* r r)))", &mut env).unwrap();
+        let program = "(
+                        (define r 10)
+                        (define pi 314)
+                        (* pi (* r r))
+                      )";
+        let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
             Object::List(vec![Object::Integer((314 * 10 * 10) as i64)])
@@ -162,7 +167,11 @@ mod tests {
     #[test]
     fn test_sqr_function() {
         let mut env = Rc::new(RefCell::new(Env::new()));
-        let result = eval("((define sqr (lambda (r) (* r r))) (sqr 10))", &mut env).unwrap();
+        let program = "(
+                        (define sqr (lambda (r) (* r r))) 
+                        (sqr 10)
+                       )";
+        let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
             Object::List(vec![Object::Integer((10 * 10) as i64)])

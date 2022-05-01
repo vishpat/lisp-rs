@@ -82,11 +82,15 @@ mod tests {
 
     #[test]
     fn test_area_of_a_circle() {
-        let list = parse("(begin (define r 10)(define pi 314)(* pi (* r r)))").unwrap();
+        let program = "(
+                         (define r 10)
+                         (define pi 314)
+                         (* pi (* r r))
+                       )";
+        let list = parse(program).unwrap();
         assert_eq!(
             list,
             Object::List(vec![
-                Object::Symbol("begin".to_string()),
                 Object::List(vec![
                     Object::Symbol("define".to_string()),
                     Object::Symbol("r".to_string()),
