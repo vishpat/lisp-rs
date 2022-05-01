@@ -35,6 +35,74 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
     }
 }
 
+fn eval_define(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let sym = match &list[1] {
+        Object::Symbol(s) => s.clone(),
+        _ => return Err(format!("Invalid define")),
+    };
+    let val = eval_list(&list[2], env)?;
+    env.borrow_mut().set(&sym, val);
+    Ok(Object::Void)
+}
+
+fn eval_if(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let cond = eval_list(&list[1], env)?;
+    if cond == Object::Bool(true) {
+        return eval_list(&list[2], env);
+    } else {
+        return eval_list(&list[3], env);
+    }
+}
+
+fn eval_function_definition(
+    list: &Vec<Object>
+) -> Result<Object, String> {
+    let params = match &list[1] {
+        Object::List(list) => {
+            let mut params = Vec::new();
+            for param in list {
+                match param {
+                    Object::Symbol(s) => params.push(s.clone()),
+                    _ => return Err(format!("Invalid lambda parameter")),
+                }
+            }
+            params
+        }
+        _ => return Err(format!("Invalid lambda")),
+    };
+
+    let body = match &list[2] {
+        Object::List(list) => list.clone(),
+        _ => return Err(format!("Invalid lambda")),
+    };
+    Ok(Object::Lambda(params, body))
+}
+
+fn eval_function_call(
+    s: &str,
+    list: &Vec<Object>,
+    env: &mut Rc<RefCell<Env>>,
+) -> Result<Object, String> {
+    let lamdba = env.borrow_mut().get(s);
+    if lamdba.is_none() {
+        return Err(format!("Unbound symbol: {}", s));
+    }
+
+    let func = lamdba.unwrap();
+    match func {
+        Object::Lambda(params, body) => {
+            let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+            for (i, param) in params.iter().enumerate() {
+                let val = eval_list(&list[i + 1], env)?;
+                new_env.borrow_mut().set(param, val);
+            }
+            let new_body = body.clone();
+            return eval_list(&Object::List(new_body), &mut new_env);
+        }
+        _ => return Err(format!("Not a lambda: {}", s)),
+    }
+}
+
 fn eval_list(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     match obj {
         Object::Void => Ok(Object::Void),
@@ -52,67 +120,13 @@ fn eval_list(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String>
             let head = &list[0];
             match head {
                 Object::Symbol(s) => match s.as_str() {
-                    "+" | "-" | "*" | "/" | "<" | ">" | "="| "!=" => {
+                    "+" | "-" | "*" | "/" | "<" | ">" | "=" | "!=" => {
                         return eval_binary_op(&list, env);
                     }
-                    "define" => {
-                        let sym = match &list[1] {
-                            Object::Symbol(s) => s.clone(),
-                            _ => return Err(format!("Invalid define")),
-                        };
-                        let val = eval_list(&list[2], env)?;
-                        env.borrow_mut().set(&sym, val);
-                        return Ok(Object::Void);
-                    }
-                    "if" => {
-                        let cond = eval_list(&list[1], env)?;
-                        if cond == Object::Bool(true) {
-                            return eval_list(&list[2], env);
-                        } else {
-                            return eval_list(&list[3], env);
-                        }
-                    }
-                    "lambda" => {
-                        let params = match &list[1] {
-                            Object::List(list) => {
-                                let mut params = Vec::new();
-                                for param in list {
-                                    match param {
-                                        Object::Symbol(s) => params.push(s.clone()),
-                                        _ => return Err(format!("Invalid lambda parameter")),
-                                    }
-                                }
-                                params
-                            }
-                            _ => return Err(format!("Invalid lambda")),
-                        };
-
-                        let body = match &list[2] {
-                            Object::List(list) => list.clone(),
-                            _ => return Err(format!("Invalid lambda")),
-                        };
-                        return Ok(Object::Lambda(params, body));
-                    }
-                    _ => {
-                        let lamdba = env.borrow_mut().get(s);
-                        if lamdba.is_none() {
-                            return Err(format!("Unbound symbol: {}", s));
-                        }
-
-                        let func = lamdba.unwrap();
-                        match func {
-                            Object::Lambda(params, body) => {
-                                let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
-                                for (i, param) in params.iter().enumerate() {
-                                    let val = eval_list(&list[i + 1], env)?;
-                                    new_env.borrow_mut().set(param, val);
-                                }
-                                let new_body = body.clone();
-                                return eval_list(&Object::List(new_body), &mut new_env);
-                            }
-                            _ => return Err(format!("Not a lambda: {}", s)),
-                        }
-                    }
+                    "define" => eval_define(&list, env),
+                    "if" => eval_if(&list, env),
+                    "lambda" => eval_function_definition(&list),
+                    _ => eval_function_call(&s, &list, env),
                 },
                 _ => {
                     let mut new_list = Vec::new();
@@ -187,12 +201,9 @@ mod tests {
                 (fib 10)
             )
         ";
-        
+
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(vec![Object::Integer((89) as i64)])
-        );
+        assert_eq!(result, Object::List(vec![Object::Integer((89) as i64)]));
     }
 
     #[test]
@@ -207,7 +218,7 @@ mod tests {
                 (area r)
             )
         ";
-        
+
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
