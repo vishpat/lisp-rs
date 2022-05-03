@@ -84,8 +84,7 @@ mod tests {
                 (* pi (* r r))
             )
         ";
-        let tokens =
-            tokenize(program).unwrap_or(vec![]);
+        let tokens = tokenize(program).unwrap_or(vec![]);
         assert_eq!(
             tokens,
             vec![

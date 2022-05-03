@@ -54,9 +54,7 @@ fn eval_if(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, Str
     }
 }
 
-fn eval_function_definition(
-    list: &Vec<Object>
-) -> Result<Object, String> {
+fn eval_function_definition(list: &Vec<Object>) -> Result<Object, String> {
     let params = match &list[1] {
         Object::List(list) => {
             let mut params = Vec::new();
@@ -204,6 +202,20 @@ mod tests {
 
         let result = eval(program, &mut env).unwrap();
         assert_eq!(result, Object::List(vec![Object::Integer((89) as i64)]));
+    }
+
+    #[test]
+    fn test_factorial() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+            (
+                (define fact (lambda (n) (if (< n 1) 1 (* n (fact (- n 1))))))
+                (fact 5)
+            )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(result, Object::List(vec![Object::Integer((120) as i64)]));
     }
 
     #[test]
