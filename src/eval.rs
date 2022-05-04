@@ -9,8 +9,8 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
         return Err(format!("Invalid number of arguments for infix operator"));
     }
     let operator = list[0].clone();
-    let left = eval_list(&list[1].clone(), env)?;
-    let right = eval_list(&list[2].clone(), env)?;
+    let left = eval_obj(&list[1].clone(), env)?;
+    let right = eval_obj(&list[2].clone(), env)?;
     let left_val = match left {
         Object::Integer(n) => n,
         _ => return Err(format!("Left operand must be an integer {:?}", left)),
@@ -40,17 +40,17 @@ fn eval_define(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
         Object::Symbol(s) => s.clone(),
         _ => return Err(format!("Invalid define")),
     };
-    let val = eval_list(&list[2], env)?;
+    let val = eval_obj(&list[2], env)?;
     env.borrow_mut().set(&sym, val);
     Ok(Object::Void)
 }
 
 fn eval_if(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
-    let cond = eval_list(&list[1], env)?;
+    let cond = eval_obj(&list[1], env)?;
     if cond == Object::Bool(true) {
-        return eval_list(&list[2], env);
+        return eval_obj(&list[2], env);
     } else {
-        return eval_list(&list[3], env);
+        return eval_obj(&list[3], env);
     }
 }
 
@@ -91,17 +91,17 @@ fn eval_function_call(
         Object::Lambda(params, body) => {
             let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
             for (i, param) in params.iter().enumerate() {
-                let val = eval_list(&list[i + 1], env)?;
+                let val = eval_obj(&list[i + 1], env)?;
                 new_env.borrow_mut().set(param, val);
             }
             let new_body = body.clone();
-            return eval_list(&Object::List(new_body), &mut new_env);
+            return eval_obj(&Object::List(new_body), &mut new_env);
         }
         _ => return Err(format!("Not a lambda: {}", s)),
     }
 }
 
-fn eval_list(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     match obj {
         Object::Void => Ok(Object::Void),
         Object::Lambda(_params, _body) => Ok(Object::Void),
@@ -129,7 +129,7 @@ fn eval_list(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String>
                 _ => {
                     let mut new_list = Vec::new();
                     for obj in list {
-                        let result = eval_list(obj, env)?;
+                        let result = eval_obj(obj, env)?;
                         match result {
                             Object::Void => {}
                             _ => new_list.push(result),
@@ -147,7 +147,7 @@ pub fn eval(program: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String>
     if parsed_list.is_err() {
         return Err(format!("{}", parsed_list.err().unwrap()));
     }
-    eval_list(&parsed_list.unwrap(), env)
+    eval_obj(&parsed_list.unwrap(), env)
 }
 
 #[cfg(test)]
