@@ -7,8 +7,8 @@ The project was inspired by Peter Norvig's article [**(How to Write a (Lisp) Int
 ## Pre-requistes
 In order to make the most out of this project, it is expected that the user is aware of the following Computer Science concepts
 
-- Lists
-- Recursions 
+- [Lists](https://en.wikipedia.org/wiki/List_(abstract_data_type))
+- [Recursion](https://en.wikipedia.org/wiki/Recursion_(computer_science)) 
 
 Rust is a non-trivial language, however to implement the Lisp interpreter, the reader needs have moderate experience with the language. Knowing the following four concepts with should be enough for the user to understand the whole project 
 
@@ -18,11 +18,11 @@ Rust is a non-trivial language, however to implement the Lisp interpreter, the r
 
 ## Lisp Dialect
 
-In order to simplify the understanding of the implementation of the interpreter, the number of features supported by it have been limited on purpose.
+In order keep the interpreter simple, the number of features supported by it have been limited on purpose. Following are the data types and statements that will be supported by the interpreter.
 
 ### Data types
-- Integer
-- Bool
+- integer
+- boolean
 
 ### Statements
 - variable definition and assignment
@@ -55,6 +55,7 @@ Following are some of the sample programs that will be run by the interpreter
 
 The interpreter will be implemented from scratch and without the help of any tools such as [nom](https://docs.rs/nom/latest/nom/) or [pest](https://pest.rs/). The interperter is broken down into three phases
 
-- [Lexer](./lexer.md) - 20 lines of code
-- [Parser](./parser.md) - 60 lines of code
-- [Evaluator](./evaluator.md) - 150 lines of code
+- [Lexer](./lexer.md) ~ 20 lines of code
+- [Parser](./parser.md) ~ 60 lines of code
+- [Evaluator](./evaluator.md) ~ 150 lines of code
+- [REPL](./repl.md) ~ 40 lines of code
