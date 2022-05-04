@@ -1,0 +1,6 @@
+[book]
+authors = ["Vishal Patil"]
+language = "en"
+multilingual = false
+src = "src"
+title = "Lisp interpreter in Rust"
