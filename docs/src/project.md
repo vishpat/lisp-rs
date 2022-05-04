@@ -2,15 +2,15 @@
 
 This project implements an interpreter, in Rust, for a small subset of [Scheme](https://en.wikipedia.org/wiki/Scheme_(programming_language)), a Lisp dialect.
 
-The project was inspired by Peter Norvig's article [**(How to Write a (Lisp) Interpreter (in Python))**](http://www.norvig.com/lispy.html) and aims to make a user understand how a Lisp interpreter works by implementing one in Rust. Rust's rich programming constructs such as enum, pattern matching and error handling make it easy and a joy to implement this barebone interpreter. 
+The project was inspired by Peter Norvig's article [**(How to Write a (Lisp) Interpreter (in Python))**](http://www.norvig.com/lispy.html) and aims to make a user understand how a Lisp interpreter works by implementing one in Rust. Rust's rich programming constructs such as enum, pattern matching, and error handling make it easy and a joy to implement this bare-bone interpreter. 
 
 ## Pre-requistes
-In order to make the most out of this project, it is expected that the user is aware of the following Computer Science concepts
+To make the most out of this project, it is expected that the user is aware of the following Computer Science concepts
 
 - [Lists](https://en.wikipedia.org/wiki/List_(abstract_data_type))
 - [Recursion](https://en.wikipedia.org/wiki/Recursion_(computer_science)) 
 
-Rust is a non-trivial language, however to implement the Lisp interpreter, the reader needs have moderate experience with the language. Knowing the following four concepts with should be enough for the user to understand the whole project 
+Rust is a non-trivial language, however, to implement the Lisp interpreter, the reader needs to have moderate experience with the language. Knowing the following four concepts should be enough for the user to understand the whole project 
 
 - [Enums and Pattern Matching](https://doc.rust-lang.org/book/ch06-00-enums.html)
 - [Smart Pointers](https://doc.rust-lang.org/book/ch15-00-smart-pointers.html)
@@ -18,7 +18,7 @@ Rust is a non-trivial language, however to implement the Lisp interpreter, the r
 
 ## Lisp Dialect
 
-In order keep the interpreter simple, the number of features supported by it have been limited on purpose. Following are the data types and statements that will be supported by the interpreter.
+In order to keep the interpreter simple and its implementation easy to understand, the number of features supported by it has been limited on purpose. Following are the data types and statements that will be supported by the interpreter.
 
 ### Data types
 - integer
@@ -26,13 +26,13 @@ In order keep the interpreter simple, the number of features supported by it hav
 
 ### Statements
 - variable definition and assignment
-- if else
+- if-else
 - function definition using lambdas
 - function calls
 
 ### Examples
 
-Following are some of the sample programs that will be run by the interpreter
+Following are some of the sample programs that you will be able run using the interpreter
 
 ```lisp
     (
@@ -53,9 +53,11 @@ Following are some of the sample programs that will be run by the interpreter
 
 ## Interpreter
 
-The interpreter will be implemented from scratch and without the help of any tools such as [nom](https://docs.rs/nom/latest/nom/) or [pest](https://pest.rs/). The interperter is broken down into three phases
+The interpreter will be implemented from scratch and without the help of any tools such as [nom](https://docs.rs/nom/latest/nom/) or [pest](https://pest.rs/). The interpreter implementation is broken down into four parts
 
 - [Lexer](./lexer.md) ~ 20 lines of code
 - [Parser](./parser.md) ~ 60 lines of code
 - [Evaluator](./evaluator.md) ~ 150 lines of code
 - [REPL](./repl.md) ~ 40 lines of code
+
+Once you thoroughly understand the implementation, you will be equipped to add new features to it, such as support for new data types such as strings, floating-point numbers or functional programming constructs such as map, filter, reduce functions, etc. 
