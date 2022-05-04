@@ -32,10 +32,12 @@ In order to simplify the understanding of the implementation of the interpreter,
 
 ### Examples
 
+Following are some of the sample programs that will be run by the interpreter
+
 ```lisp
     (
-        (define fact (lambda (n) (if (< n 1) 1 (* n (fact (- n 1))))))
-        (fact 5)
+        (define factorial (lambda (n) (if (< n 1) 1 (* n (factorial (- n 1))))))
+        (factorial 5)
     )
 ```
 
@@ -56,7 +58,3 @@ The interpreter will be implemented from scratch and without the help of any too
 - [Lexer](./lexer.md) - 20 lines of code
 - [Parser](./parser.md) - 60 lines of code
 - [Evaluator](./evaluator.md) - 150 lines of code
-
-## Features
-
-Following are some of the sam
