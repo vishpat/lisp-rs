@@ -30,7 +30,7 @@ pub struct Env {
 }
 ```
 
-The interpreter creates an instance of *Env* at the start of the program to store all of the variable definitions. In addition for every function call, the interpreter creates an instance of env and uses the new instance to evaluate the function call. This new instance of env contains the function parameters as well as a back pointer to the env instance from where the function is called as shown below
+The interpreter creates an instance of *Env* at the start of the program to store all of the variable definitions. In addition for every function call, the interpreter creates a new instance of env and uses the new instance to evaluate the function call. This new instance of env contains the function parameters as well as a *back* pointer to the *parent* env instance from where the function is called as shown below with an example
 
 ```Lisp
 (
@@ -48,7 +48,63 @@ The interpreter creates an instance of *Env* at the start of the program to stor
 
 ![Function Call](images/function_call.png)   
 
+This concept will become clearer as we will walk through the code
 
-### Functions
 
+### Function Objects
+
+Functions are represented by the Lambda Object which consists of two Lists (vectors). 
+
+```
+Lambda(Vec<String>, Vec<Object>)
+```
+
+The first list is the list of parameters while the second list is the list of instructions forming the function definition. 
+
+### Evaluator
+
+The evaluator is implemented using the recursive *eval_obj* function. This function takes the List object representing the program and the global *env* variable as the input. The function then starts processing the List object representing the program by iterating over each element of this list as shown below.
+
+```
+match obj {
+    Object::List(list) => {
+        let head = &list[0];
+        match head {
+            Object::Symbol(s) => match s.as_str() {
+                "+" | "-" | "*" | "/" | "<" | ">" | "=" | "!=" => {
+                    return eval_binary_op(&list, env);
+                }
+                "define" => eval_define(&list, env),
+                "if" => eval_if(&list, env),
+                "lambda" => eval_function_definition(&list),
+                _ => eval_function_call(&s, &list, env),
+            },
+            _ => {
+                let mut new_list = Vec::new();
+                for obj in list {
+                    let result = eval_obj(obj, env)?;
+                    match result {
+                        Object::Void => {}
+                        _ => new_list.push(result),
+                    }
+                }
+                Ok(Object::List(new_list))
+            }
+        }
+    }
+    Object::Void => Ok(Object::Void),
+    Object::Lambda(_params, _body) => Ok(Object::Void),
+    Object::Bool(_) => Ok(obj.clone()),
+    Object::Integer(n) => Ok(Object::Integer(*n)),
+    Object::Symbol(s) => {
+        let val = env.borrow_mut().get(s);
+        if val.is_none() {
+            return Err(format!("Unbound symbol: {}", s));
+        }
+        return Ok(val.unwrap().clone());
+    }
+}
+
+```
+ 
 
