@@ -69,4 +69,22 @@ At this point, we have a vector of tokens for the entire Lisp program. Note that
 
 ![List Recursion](images/token_stack.png)
 
-To cement your understanding of the Lexing process please go through the tests in **lexer.rs**
+## Testing
+
+The lexer code can be unit tested as shown below
+
+```
+let tokens = tokenize("(+ 1 2)");
+assert_eq!(
+    tokens,
+    vec![
+        Token::LParen,
+        Token::Symbol("+".to_string()),
+        Token::Integer(1),
+        Token::Integer(2),
+        Token::RParen,
+    ]
+);
+```
+
+To cement your understanding of the Lexing process please go through the remaining tests in **lexer.rs**
