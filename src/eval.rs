@@ -101,44 +101,48 @@ fn eval_function_call(
     }
 }
 
+fn eval_symbol(s: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let val = env.borrow_mut().get(s);
+    if val.is_none() {
+        return Err(format!("Unbound symbol: {}", s));
+    }
+    Ok(val.unwrap().clone())
+}
+
+fn eval_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let head = &list[0];
+    match head {
+        Object::Symbol(s) => match s.as_str() {
+            "+" | "-" | "*" | "/" | "<" | ">" | "=" | "!=" => {
+                return eval_binary_op(&list, env);
+            }
+            "define" => eval_define(&list, env),
+            "if" => eval_if(&list, env),
+            "lambda" => eval_function_definition(&list),
+            _ => eval_function_call(&s, &list, env),
+        },
+        _ => {
+            let mut new_list = Vec::new();
+            for obj in list {
+                let result = eval_obj(obj, env)?;
+                match result {
+                    Object::Void => {}
+                    _ => new_list.push(result),
+                }
+            }
+            Ok(Object::List(new_list))
+        }
+    }
+}
+
 fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     match obj {
+        Object::List(list) => eval_list(list, env),
         Object::Void => Ok(Object::Void),
         Object::Lambda(_params, _body) => Ok(Object::Void),
         Object::Bool(_) => Ok(obj.clone()),
         Object::Integer(n) => Ok(Object::Integer(*n)),
-        Object::Symbol(s) => {
-            let val = env.borrow_mut().get(s);
-            if val.is_none() {
-                return Err(format!("Unbound symbol: {}", s));
-            }
-            return Ok(val.unwrap().clone());
-        }
-        Object::List(list) => {
-            let head = &list[0];
-            match head {
-                Object::Symbol(s) => match s.as_str() {
-                    "+" | "-" | "*" | "/" | "<" | ">" | "=" | "!=" => {
-                        return eval_binary_op(&list, env);
-                    }
-                    "define" => eval_define(&list, env),
-                    "if" => eval_if(&list, env),
-                    "lambda" => eval_function_definition(&list),
-                    _ => eval_function_call(&s, &list, env),
-                },
-                _ => {
-                    let mut new_list = Vec::new();
-                    for obj in list {
-                        let result = eval_obj(obj, env)?;
-                        match result {
-                            Object::Void => {}
-                            _ => new_list.push(result),
-                        }
-                    }
-                    Ok(Object::List(new_list))
-                }
-            }
-        }
+        Object::Symbol(s) => eval_symbol(s, env),
     }
 }
 
