@@ -63,48 +63,105 @@ The first list is the list of parameters while the second list is the list of in
 
 ### Evaluator
 
-The evaluator is implemented using the recursive *eval_obj* function. This function takes the List object representing the program and the global *env* variable as the input. The function then starts processing the List object representing the program by iterating over each element of this list as shown below.
+The evaluator is implemented using the recursive *eval_obj* function. The *eval_obj* function takes the List object representing the program and the global *env* variable as the input. The function then starts processing the List object representing the program by iterating over each element of this list 
 
 ```
-match obj {
-    Object::List(list) => {
-        let head = &list[0];
-        match head {
-            Object::Symbol(s) => match s.as_str() {
-                "+" | "-" | "*" | "/" | "<" | ">" | "=" | "!=" => {
-                    return eval_binary_op(&list, env);
-                }
-                "define" => eval_define(&list, env),
-                "if" => eval_if(&list, env),
-                "lambda" => eval_function_definition(&list),
-                _ => eval_function_call(&s, &list, env),
-            },
-            _ => {
-                let mut new_list = Vec::new();
-                for obj in list {
-                    let result = eval_obj(obj, env)?;
-                    match result {
-                        Object::Void => {}
-                        _ => new_list.push(result),
-                    }
-                }
-                Ok(Object::List(new_list))
-            }
-        }
-    }
-    Object::Void => Ok(Object::Void),
-    Object::Lambda(_params, _body) => Ok(Object::Void),
-    Object::Bool(_) => Ok(obj.clone()),
-    Object::Integer(n) => Ok(Object::Integer(*n)),
-    Object::Symbol(s) => {
-        let val = env.borrow_mut().get(s);
-        if val.is_none() {
-            return Err(format!("Unbound symbol: {}", s));
-        }
-        return Ok(val.unwrap().clone());
+fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) 
+	-> Result<Object, String> 
+{
+    match obj {
+        Object::List(list) => eval_list(list, env),
+        Object::Void => Ok(Object::Void),
+        Object::Lambda(_params, _body) => Ok(Object::Void),
+        Object::Bool(_) => Ok(obj.clone()),
+        Object::Integer(n) => Ok(Object::Integer(*n)),
+        Object::Symbol(s) => eval_symbol(s, env),
     }
 }
+```
+
+In the case of the atomic objects such as an integer and boolean, the evaluator simply returns a copy of the object. In the case of the Void and Lambda (function objects), it returns the Void object. We will now walk through the *eval_symbol* and *eval_list* functions which implement most of the functionality of the evaluator.
+
+### eval_symbol
+
+The job of this function is to look up the Object bound to the symbol. This is done by recursively looking up in the passed *env* variable or any of its parent *env* until the root of the program. 
 
 ```
+let val = env.borrow_mut().get(s);
+if val.is_none() {
+    return Err(format!("Unbound symbol: {}", s));
+}
+Ok(val.unwrap().clone())
+```
+
+The bound object can be an atomic value such as an integer, boolean, or function object.
+
+### eval_list
+
+The *eval_list* function is the core of the evaluator and is implemented as shown below.
+
+```
+let head = &list[0];
+match head {
+    Object::Symbol(s) => match s.as_str() {
+        "+" | "-" | "*" | "/" | "<" | ">" | "=" | "!=" => {
+            return eval_binary_op(&list, env);
+        }
+        "define" => eval_define(&list, env),
+        "if" => eval_if(&list, env),
+        "lambda" => eval_function_definition(&list),
+        _ => eval_function_call(&s, &list, env),
+    },
+    _ => {
+        let mut new_list = Vec::new();
+        for obj in list {
+            let result = eval_obj(obj, env)?;
+            match result {
+                Object::Void => {}
+                _ => new_list.push(result),
+            }
+        }
+        Ok(Object::List(new_list))
+    }
+}
+```
+
+This function peeks at the head of the list and if the head does not match the symbol object, it iterates all of the elements of the list recursively evaluating each element and returning a new list with the evaluated object values.
+
+### Binary operations
+
+If the head of the list matches a symbol, the list is evaluated on the basis of the type of the symbol. If the symbol matches a binary operation, for example 
+
+```
+(+ x y)
+```
+the *eval_binary_op* function calls the *eval_obj* on the second and third element of the list and performs the binary operation on the evaluated values.
+
+
+### Variable definitions
+
+If the head of the list matches the *define* keyword, for example
+
+```
+( define sqr (lambda (x) (* x x)) )
+```
+
+the *eval_define* function calls *eval_obj* on the third argument of the list and assigns the evaluated object value to the symbol defined by the second argument in the list. The symbol and its object value are then stored in the current *env*. 
+
+```
+let sym = match &list[1] {
+    Object::Symbol(s) => s.clone(),
+    _ => return Err(format!("Invalid define")),
+};
+let val = eval_obj(&list[2], env)?;
+env.borrow_mut().set(&sym, val);
+```
+
+In the example above the symbol *sqr* and the function object representing the lambda will be stored in the current *env*. Once the function *sqr* has been defined in this manner, any latter code can access the corresponding function object by looking up the symbol *sqr* in *env*.
+
+
+
+
+
  
 

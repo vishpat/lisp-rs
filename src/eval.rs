@@ -36,6 +36,10 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
 }
 
 fn eval_define(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    if list.len() != 3 {
+        return Err(format!("Invalid number of arguments for define"));
+    }
+
     let sym = match &list[1] {
         Object::Symbol(s) => s.clone(),
         _ => return Err(format!("Invalid define")),
