@@ -55,7 +55,7 @@ This concept will become clearer as we will walk through the code
 
 Functions are represented by the Lambda Object which consists of two Lists (vectors). 
 
-```
+```Rust
 Lambda(Vec<String>, Vec<Object>)
 ```
 
@@ -65,7 +65,7 @@ The first list is the list of parameters while the second list is the list of in
 
 The evaluator is implemented using the recursive *eval_obj* function. The *eval_obj* function takes the List object representing the program and the global *env* variable as the input. The function then starts processing the List object representing the program by iterating over each element of this list 
 
-```
+```Rust
 fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) 
 	-> Result<Object, String> 
 {
@@ -86,7 +86,7 @@ In the case of the atomic objects such as an integer and boolean, the evaluator 
 
 The job of this function is to look up the Object bound to the symbol. This is done by recursively looking up in the passed *env* variable or any of its parent *env* until the root of the program. 
 
-```
+```Rust
 let val = env.borrow_mut().get(s);
 if val.is_none() {
     return Err(format!("Unbound symbol: {}", s));
@@ -100,7 +100,7 @@ The bound object can be an atomic value such as an integer, boolean, or function
 
 The *eval_list* function is the core of the evaluator and is implemented as shown below.
 
-```
+```Rust
 let head = &list[0];
 match head {
     Object::Symbol(s) => match s.as_str() {
@@ -132,7 +132,7 @@ This function peeks at the head of the list and if the head does not match the s
 
 If the head of the list matches a symbol, the list is evaluated on the basis of the type of the symbol. If the symbol matches a binary operation, for example 
 
-```
+```Lisp
 (+ x y)
 ```
 the *eval_binary_op* function calls the *eval_obj* on the second and third element of the list and performs the binary operation on the evaluated values.
@@ -142,13 +142,13 @@ the *eval_binary_op* function calls the *eval_obj* on the second and third eleme
 
 If the head of the list matches the *define* keyword, for example
 
-```
-( define sqr (lambda (x) (* x x)) )
+```Lisp
+(define sqr (lambda (x) (* x x)))
 ```
 
 the *eval_define* function calls *eval_obj* on the third argument of the list and assigns the evaluated object value to the symbol defined by the second argument in the list. The symbol and its object value are then stored in the current *env*. 
 
-```
+```Rust
 let sym = match &list[1] {
     Object::Symbol(s) => s.clone(),
     _ => return Err(format!("Invalid define")),
