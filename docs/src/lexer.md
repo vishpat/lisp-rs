@@ -10,13 +10,18 @@
 
 ```Rust
 pub enum Token {
-    Integer(i64),     // Integer
-    Symbol(String),   // A Lisp symbol other than 
-                      // an integer or parenthesis
-    LParen,           // Left parenthesis
-    RParen,           // Right parenthesis
+    Integer(i64),   
+    Symbol(String),                 
+    LParen,     
+    RParen,           
 }
 ```
+
+- Integer: A signed 64-bit integer
+- Symbol: Any group of characters other than an integer or parenthesis
+- LParen: Left parenthesis
+- RParen: Right parenthesis
+
 
 The first step in implementing a lexer is to replace the parenthesis with an extra space before and after it. For example,
 
@@ -63,3 +68,5 @@ Once the words for the program are obtained, they can be converted into tokens u
 At this point, we have a vector of tokens for the entire Lisp program. Note that a vector in Rust is a stack, hence the tokens are stored in the vector in the reverse order as shown below with an example. 
 
 ![List Recursion](images/token_stack.png)
+
+To cement your understanding of the Lexing process please go through the tests in **lexer.rs**
