@@ -3,7 +3,6 @@
 ## Crux
 Lisp is an abbreviation for **Lis**t **P**rocessor. Every Lisp program is simply a list of lists. The elements of these lists can either be atomic values such as an integer or a string or another list. Thus a Lisp program is a recursive list as shown below. 
 
-<p align="center">
 ![List Recursion](images/list.png)
 
 
