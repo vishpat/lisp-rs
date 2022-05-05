@@ -59,3 +59,7 @@ Once the words for the program are obtained, they can be converted into tokens u
     }
 ``` 
 
+
+At this point, we have a vector of tokens for the entire Lisp program. Note that a vector in Rust is a stack, hence the tokens are stored in the vector in the reverse order as shown below with an example. 
+
+![List Recursion](images/token_stack.png)

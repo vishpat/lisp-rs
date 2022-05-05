@@ -30,6 +30,12 @@ In order to keep the interpreter simple and its implementation easy to understan
 - function definition using lambdas
 - function calls
 
+### Keywords
+
+- define
+- if-else
+- lambda
+
 ### Examples
 
 Following are some of the sample programs that you will be able run using the interpreter
