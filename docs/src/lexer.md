@@ -38,30 +38,31 @@ will get converted to
 With this simple trick, the process of tokenization involves splitting the Lisp program with whitespace. 
 
 ```Rust
-    let program2 = program.replace("(", " ( ").replace(")", " ) ");
+    let program2 = program.replace("(", " ( ")
+                          .replace(")", " ) ");
     let words = program2.split_whitespace();
 ```
 
 Once the words for the program are obtained, they can be converted into tokens using Rust's pattern matching as follows
 
 ```Rust
-    let mut tokens: Vec<Token> = Vec::new();
-    for word in words {
-        match word {
-            "(" => tokens.push(Token::LParen),
-            ")" => tokens.push(Token::RParen),
-            _ => {
-                let mut chars = word.chars();
-                let first_char = chars.next().unwrap();
-                if first_char.is_digit(10) {
-                    let integer = word.parse::<i64>().unwrap();
-                    tokens.push(Token::Integer(integer));
-                } else {
-                    tokens.push(Token::Symbol(word.to_string()));
-                }
+let mut tokens: Vec<Token> = Vec::new();
+for word in words {
+    match word {
+        "(" => tokens.push(Token::LParen),
+        ")" => tokens.push(Token::RParen),
+        _ => {
+            let mut chars = word.chars();
+            let first_char = chars.next().unwrap();
+            if first_char.is_digit(10) {
+                let integer = word.parse::<i64>().unwrap();
+                tokens.push(Token::Integer(integer));
+            } else {
+                tokens.push(Token::Symbol(word.to_string()));
             }
         }
     }
+}
 ``` 
 
 
