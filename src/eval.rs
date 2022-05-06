@@ -50,8 +50,17 @@ fn eval_define(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
 }
 
 fn eval_if(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
-    let cond = eval_obj(&list[1], env)?;
-    if cond == Object::Bool(true) {
+    if list.len() != 4 {
+        return Err(format!("Invalid number of arguments for if statement"));
+    }
+
+    let cond_obj = eval_obj(&list[1], env)?;
+    let cond = match cond_obj {
+        Object::Bool(b) => b,
+        _ => return Err(format!("Condition must be a boolean")),
+    };
+
+    if cond == true {
         return eval_obj(&list[2], env);
     } else {
         return eval_obj(&list[3], env);
