@@ -214,6 +214,47 @@ The evaluated parameter and body vector are returned as the *lambda* object
 
 ### Function Call
 
+If the head of the list is a Symbol object and it does not match any of the keywords, the interpreter assumes that the Symbol object maps to a Lambda (function object). An example of the function call in Lisp is as follows
+
+```Lisp
+(find_max a b c)
+```
+
+To evaluate this list the *eval_function_call* function is called. This function first performs the lookup for the function object using the function name, *find_max* in the case of this example.
+
+```Rust
+let lamdba = env.borrow_mut().get(s);
+if lamdba.is_none() {
+    return Err(format!("Unbound symbol: {}", s));
+}
+```
+
+If the function object is found, a new *env* object is created. This new *env* object has a pointer to the parent *env* object.   
+
+```Rust
+let mut new_env = Rc::new(
+    			  RefCell::new(
+    			  Env::extend(env.clone())));
+
+```
+
+The next step in evaluating the function call requires preparing the function parameters. This is done by iterating over the remainder of the list and evaluating each parameter. The parameter name and the evaluated object are then set in the new *env* object.
+
+```Rust
+for (i, param) in params.iter().enumerate() {
+    let val = eval_obj(&list[i + 1], env)?;
+    new_env.borrow_mut().set(param, val);
+}
+```
+
+Finally, the function body is evaluated by passing the new_env, which contains the parameters to the function
+
+```Rust
+let new_body = body.clone();
+return eval_obj(&Object::List(new_body), &mut new_env);
+```
+
+
 
 
  
