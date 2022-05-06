@@ -159,7 +159,77 @@ env.borrow_mut().set(&sym, val);
 
 In the example above the symbol *sqr* and the function object representing the lambda will be stored in the current *env*. Once the function *sqr* has been defined in this manner, any latter code can access the corresponding function object by looking up the symbol *sqr* in *env*.
 
+### If statement
 
+If the head of the list matches the *if* keyword, for example
+
+```Lisp
+(if (> x y) (x) (y))
+```
+
+the *eval_if* function calls **eval_obj** on the second element of the list and depending upon whether the evaluated value is true or false, calls the eval_obj on the third or fourth element of the list and returns the corresponding value
+
+```
+let cond_obj = eval_obj(&list[1], env)?;
+let cond = match cond_obj {
+    Object::Bool(b) => b,
+    _ => return Err(format!("Condition must be a boolean")),
+};
+
+if cond == true {
+    return eval_obj(&list[2], env);
+} else {
+    return eval_obj(&list[3], env);
+}
+```
+
+### Lambda
+As mentioned earlier, the *lambda* (or function) object is consists of two vectors
+
+```Rust
+Lambda(Vec<String>, Vec<Object>)
+```
+The first vector represents the symbols forming the parameters and the second vector contains the list of objects forming the function body.
+
+If the head of the list matches the *lambda* keyword, for example
+
+```Lisp
+(lambda (x) (* x x))
+```
+the *eval_function_definition* function evaluates the second element of the list as a vector of parameter names. 
+
+```Rust
+let params = match &list[1] {
+    Object::List(list) => {
+        let mut params = Vec::new();
+        for param in list {
+            match param {
+                Object::Symbol(s) => params.push(s.clone()),
+                _ => return Err(format!("Invalid lambda parameter")),
+            }
+        }
+        params
+    }
+    _ => return Err(format!("Invalid lambda")),
+};
+```
+
+The third element of the list is simply cloned as the function body.
+
+```Rust
+let body = match &list[2] {
+    Object::List(list) => list.clone(),
+    _ => return Err(format!("Invalid lambda")),
+};
+```
+
+```Rust
+Ok(Object::Lambda(params, body))
+``` 
+
+The evaluated parameter and body vector are returned as the *lambda* object
+
+### Function Call
 
 
 
