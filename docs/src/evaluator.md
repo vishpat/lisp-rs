@@ -8,11 +8,30 @@ Now comes the most exciting part of the project. Evaluation is the final step th
 
 ## Code Walk Through
 
-Before walking through the evaluator code, it is important to explain the design of how variables and functions are implemented for the interpreter. 
+The evaluator is implemented using the recursive *eval_obj* function. The *eval_obj* function takes the List object representing the program and the global *env* variable as the input. The function then starts processing the List object representing the program by iterating over each element of this list 
 
-### Variables
+```Rust
+fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) 
+	-> Result<Object, String> 
+{
+    match obj {
+        Object::Void => Ok(Object::Void),
+        Object::Lambda(_params, _body) => Ok(Object::Void),
+        Object::Bool(_) => Ok(obj.clone()),
+        Object::Integer(n) => Ok(Object::Integer(*n)),
+        Object::Symbol(s) => eval_symbol(s, env),
+        Object::List(list) => eval_list(list, env),
+    }
+}
+```
 
-The variables are just *string* symbols assigned to values and they are created using the **define** keyword. Note a variable can be assigned atomic values such as integer or a boolean as well as function objects 
+In the case of the atomic objects such as an integer and boolean, the evaluator simply returns a copy of the object. In the case of the Void and Lambda (function objects), it returns the Void object. We will now walk through the *eval_symbol* and *eval_list* functions which implement most of the functionality of the evaluator.
+
+### eval_symbol
+
+Before understanding the *eval_symbol* function, it is important to understand the design of how variables are implemented for the Lisp interpreter.
+
+The variables are just *string* symbols assigned to values and they are created using the **define** keyword. Note a variable can be assigned atomic values such as integer or a boolean or it can be assigned function objects 
 
 ```Lisp
 ( 
@@ -20,7 +39,7 @@ The variables are just *string* symbols assigned to values and they are created 
   (define sqr (lambda (r) (* r r))) 
 )
 ```
-This defines (or creates) two variables with the names x and sqr that represent an integer and string object respectively. Also, the scope of these variables lies within the *list object* that they are defined under. This is achieved by storing the mapping from the variable names (strings) to the objects in a map-like data structure as shown below.
+This defines (or creates) two variables with the names x and sqr that represent an integer and function object respectively. Also, the scope of these variables lies within the *list object* that they are defined under. This is achieved by storing the mapping from the variable names (strings) to the objects in a map-like data structure called *Env* as shown below.
 
 ```Rust
 // env.rs
@@ -30,7 +49,7 @@ pub struct Env {
 }
 ```
 
-The interpreter creates an instance of *Env* at the start of the program to store all of the variable definitions. In addition for every function call, the interpreter creates a new instance of env and uses the new instance to evaluate the function call. This new instance of env contains the function parameters as well as a *back* pointer to the *parent* env instance from where the function is called as shown below with an example
+The interpreter creates an instance of *Env* at the start of the program to store the global variable definitions. In addition, for every function call, the interpreter creates a new instance of env and uses the new instance to evaluate the function call. This new instance of env contains the function parameters as well as a *back* pointer to the *parent* env instance from where the function is called as shown below with an example
 
 ```Lisp
 (
@@ -46,45 +65,11 @@ The interpreter creates an instance of *Env* at the start of the program to stor
 )
 ```
 
-![Function Call](images/function_call.png)   
+![Function Call](images/env.png)   
 
-This concept will become clearer as we will walk through the code
+This concept will become clearer as we will walk through the code.
 
-
-### Function Objects
-
-Functions are represented by the Lambda Object which consists of two Lists (vectors). 
-
-```Rust
-Lambda(Vec<String>, Vec<Object>)
-```
-
-The first list is the list of parameters while the second list is the list of instructions forming the function definition. 
-
-### Evaluator
-
-The evaluator is implemented using the recursive *eval_obj* function. The *eval_obj* function takes the List object representing the program and the global *env* variable as the input. The function then starts processing the List object representing the program by iterating over each element of this list 
-
-```Rust
-fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) 
-	-> Result<Object, String> 
-{
-    match obj {
-        Object::List(list) => eval_list(list, env),
-        Object::Void => Ok(Object::Void),
-        Object::Lambda(_params, _body) => Ok(Object::Void),
-        Object::Bool(_) => Ok(obj.clone()),
-        Object::Integer(n) => Ok(Object::Integer(*n)),
-        Object::Symbol(s) => eval_symbol(s, env),
-    }
-}
-```
-
-In the case of the atomic objects such as an integer and boolean, the evaluator simply returns a copy of the object. In the case of the Void and Lambda (function objects), it returns the Void object. We will now walk through the *eval_symbol* and *eval_list* functions which implement most of the functionality of the evaluator.
-
-### eval_symbol
-
-The job of this function is to look up the Object bound to the symbol. This is done by recursively looking up in the passed *env* variable or any of its parent *env* until the root of the program. 
+The job of *eval_symbol* is to look up the Object bound to the symbol. This is done by recursively looking up in the passed *env* variable or any of its parent *env* until the root of the program. 
 
 ```Rust
 let val = env.borrow_mut().get(s);
@@ -107,8 +92,8 @@ match head {
         "+" | "-" | "*" | "/" | "<" | ">" | "=" | "!=" => {
             return eval_binary_op(&list, env);
         }
-        "define" => eval_define(&list, env),
         "if" => eval_if(&list, env),
+        "define" => eval_define(&list, env),
         "lambda" => eval_function_definition(&list),
         _ => eval_function_call(&s, &list, env),
     },
@@ -137,28 +122,6 @@ If the head of the list matches a symbol, the list is evaluated on the basis of 
 ```
 the *eval_binary_op* function calls the *eval_obj* on the second and third element of the list and performs the binary operation on the evaluated values.
 
-
-### Variable definitions
-
-If the head of the list matches the *define* keyword, for example
-
-```Lisp
-(define sqr (lambda (x) (* x x)))
-```
-
-the *eval_define* function calls *eval_obj* on the third argument of the list and assigns the evaluated object value to the symbol defined by the second argument in the list. The symbol and its object value are then stored in the current *env*. 
-
-```Rust
-let sym = match &list[1] {
-    Object::Symbol(s) => s.clone(),
-    _ => return Err(format!("Invalid define")),
-};
-let val = eval_obj(&list[2], env)?;
-env.borrow_mut().set(&sym, val);
-```
-
-In the example above the symbol *sqr* and the function object representing the lambda will be stored in the current *env*. Once the function *sqr* has been defined in this manner, any latter code can access the corresponding function object by looking up the symbol *sqr* in *env*.
-
 ### If statement
 
 If the head of the list matches the *if* keyword, for example
@@ -183,13 +146,58 @@ if cond == true {
 }
 ```
 
+## Detour 
+
+Before walking through the rest of the evaluator code, it is important to explain the design of how variables and function objects are implemented for the interpreter. 
+
+### Variables
+
+
+
+### Function Objects
+
+Functions are represented by the Lambda Object which consists of two Lists (vectors). 
+
+```Rust
+Lambda(Vec<String>, Vec<Object>)
+```
+
+The first list is the list of parameters while the second list is the list of instructions forming the function definition. 
+
+
+## Code Walk Through - continued
+
+Let's continue our discussion of the *eval_list* function.
+
+
+### Variable definitions
+
+If the head of the list in the *eval_list* function matches the *define* keyword, for example
+
+```Lisp
+(define sqr (lambda (x) (* x x)))
+```
+
+the *eval_define* function calls *eval_obj* on the third argument of the list and assigns the evaluated object value to the symbol defined by the second argument in the list. The symbol and its object value are then stored in the current *env*. 
+
+```Rust
+let sym = match &list[1] {
+    Object::Symbol(s) => s.clone(),
+    _ => return Err(format!("Invalid define")),
+};
+let val = eval_obj(&list[2], env)?;
+env.borrow_mut().set(&sym, val);
+```
+
+In the example above the symbol *sqr* and the function object representing the lambda will be stored in the current *env*. Once the function *sqr* has been defined in this manner, any latter code can access the corresponding function object by looking up the symbol *sqr* in *env*.
+
+
 ### Lambda
 As mentioned earlier, the *lambda* (or function) object is consists of two vectors
 
 ```Rust
 Lambda(Vec<String>, Vec<Object>)
 ```
-The first vector represents the symbols forming the parameters and the second vector contains the list of objects forming the function body.
 
 If the head of the list matches the *lambda* keyword, for example
 
@@ -234,4 +242,3 @@ The evaluated parameter and body vector are returned as the *lambda* object
 
 
  
-
