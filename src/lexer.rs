@@ -4,6 +4,8 @@ use std::fmt;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Integer(i64),
+    Float(f64),
+    String(String),
     Symbol(String),
     LParen,
     RParen,
@@ -13,6 +15,8 @@ impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Token::Integer(n) => write!(f, "{}", n),
+            Token::Float(n) => write!(f, "{}", n),
+            Token::String(s) => write!(f, "{}", s),
             Token::Symbol(s) => write!(f, "{}", s),
             Token::LParen => write!(f, "("),
             Token::RParen => write!(f, ")"),
@@ -45,9 +49,23 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
                 let i = word.parse::<i64>();
                 if i.is_ok() {
                     tokens.push(Token::Integer(i.unwrap()));
-                } else {
-                    tokens.push(Token::Symbol(word.to_string()));
+                    continue;
                 }
+
+                let f = word.parse::<f64>();
+                if f.is_ok() {
+                    tokens.push(Token::Float(f.unwrap()));
+                    continue;
+                }
+
+                if word.chars().nth(0).unwrap() == '"' && 
+                     word.chars().last().unwrap() == '"' {
+                    let s = String::from(&word[1..word.len() - 1]);
+                    tokens.push(Token::String(s));
+                    continue;
+                }
+
+                tokens.push(Token::Symbol(word.to_string()));
             }
         }
     }
