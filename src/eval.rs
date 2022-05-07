@@ -55,7 +55,6 @@ fn eval_list_data(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
     for obj in list[1..].iter() {
         new_list.push(eval_obj(obj, env)?);
     }
-    println!("Processed list data {:?}", new_list);
     Ok(Object::ListData(new_list))
 }
 
@@ -134,7 +133,6 @@ fn eval_symbol(s: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
 
 fn eval_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let head = &list[0];
-    println!("Evaluating list: {:?} with head {:?}", list, head);
     match head {
         Object::Symbol(s) => match s.as_str() {
             "+" | "-" | "*" | "/" | "<" | ">" | "=" | "!=" => {
