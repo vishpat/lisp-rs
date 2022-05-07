@@ -49,6 +49,16 @@ fn eval_define(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     Ok(Object::Void)
 }
 
+fn eval_list_data(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let mut new_list = Vec::new();
+
+    for obj in list[1..].iter() {
+        new_list.push(eval_obj(obj, env)?);
+    }
+    println!("Processed list data {:?}", new_list);
+    Ok(Object::ListData(new_list))
+}
+
 fn eval_if(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 4 {
         return Err(format!("Invalid number of arguments for if statement"));
@@ -96,7 +106,7 @@ fn eval_function_call(
 ) -> Result<Object, String> {
     let lamdba = env.borrow_mut().get(s);
     if lamdba.is_none() {
-        return Err(format!("Unbound symbol: {}", s));
+        return Err(format!("Unbound function: {}", s));
     }
 
     let func = lamdba.unwrap();
@@ -124,6 +134,7 @@ fn eval_symbol(s: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
 
 fn eval_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let head = &list[0];
+    println!("Evaluating list: {:?} with head {:?}", list, head);
     match head {
         Object::Symbol(s) => match s.as_str() {
             "+" | "-" | "*" | "/" | "<" | ">" | "=" | "!=" => {
@@ -131,6 +142,7 @@ fn eval_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, S
             }
             "define" => eval_define(&list, env),
             "if" => eval_if(&list, env),
+            "list" => eval_list_data(&list, env),
             "lambda" => eval_function_definition(&list),
             _ => eval_function_call(&s, &list, env),
         },
@@ -156,6 +168,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
         Object::Bool(_) => Ok(obj.clone()),
         Object::Integer(n) => Ok(Object::Integer(*n)),
         Object::Symbol(s) => eval_symbol(s, env),
+        Object::ListData(l) => eval_list_data(l, env),
     }
 }
 
