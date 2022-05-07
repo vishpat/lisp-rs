@@ -53,9 +53,9 @@ while !tokens.is_empty() {
     let t = token.unwrap();
     match t {
         Token::Integer(n) => 
-        		list.push(Object::Integer(n)),
+            list.push(Object::Integer(n)),
         Token::Symbol(s) => 
-        		list.push(Object::Symbol(s)),
+            list.push(Object::Symbol(s)),
         Token::LParen => {
             tokens.push(Token::LParen);
             let sub_list = parse_list(tokens)?;

@@ -1,8 +1,8 @@
 # Overview
 
-This project implements an interpreter, in Rust, for a small subset of [Scheme](https://en.wikipedia.org/wiki/Scheme_(programming_language)), a Lisp dialect. However, the main goal of the project is to make sure the reader understands how the interpreter was implemented using Rust.
+The [lisp-rs](https://github.com/vishpat/lisp-rs) project implements an interpreter, in Rust, for a small subset of [Scheme](https://en.wikipedia.org/wiki/Scheme_(programming_language)), a Lisp dialect. The main goal of this document is to make sure the reader understands the inner details of how the interpreter was implemented.
 
-The project was inspired by Peter Norvig's article [**(How to Write a (Lisp) Interpreter (in Python))**](http://www.norvig.com/lispy.html) and [**Writing An Interpreter In Go**](https://interpreterbook.com). This document serves as a commentary on the [code](https://github.com/vishpat/lisp-rs/tree/0.0.1) that implements the interpreter. Rust's rich programming constructs such as enum, pattern matching, and error handling make it easy and a joy to implement this bare-bone interpreter. 
+The project was inspired by Peter Norvig's article [**(How to Write a (Lisp) Interpreter (in Python))**](http://www.norvig.com/lispy.html) and the book [**Writing An Interpreter In Go**](https://interpreterbook.com). This document serves as a commentary on the [code](https://github.com/vishpat/lisp-rs/tree/0.0.1) that implements the interpreter. Rust's rich programming constructs such as enum, pattern matching, and error handling make it easy and a joy to implement this bare-bone interpreter. 
 
 ## Pre-requistes
 To make the most out of this project, it is expected that the user is aware of the following Computer Science concepts
