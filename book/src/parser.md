@@ -2,7 +2,7 @@
 
 ## Source
 
-[parser.rs](https://github.com/vishpat/lisp-rs/blob/0.0.1/src/lexer.rs)
+[parser.rs](https://github.com/vishpat/lisp-rs/blob/0.0.1/src/parser.rs)
 
 ## Code Walk Through
 

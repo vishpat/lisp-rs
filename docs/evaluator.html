@@ -145,7 +145,7 @@
                         <h1 id="evaluator"><a class="header" href="#evaluator">Evaluator</a></h1>
 <p>Now comes the most exciting part of the project. Evaluation is the final step that will produce the result for the Lisp program. At a high level, the evaluator function recursively walks the List-based structure created by the parser and evaluates each atomic object and list (recursively), combines these intermediate values, and produces the final result. </p>
 <h2 id="source"><a class="header" href="#source">Source</a></h2>
-<p><a href="https://github.com/vishpat/lisp-rs/blob/0.0.1/src/lexer.rs">eval.rs</a></p>
+<p><a href="https://github.com/vishpat/lisp-rs/blob/0.0.1/src/eval.rs">eval.rs</a></p>
 <h2 id="code-walk-through"><a class="header" href="#code-walk-through">Code Walk Through</a></h2>
 <p>The evaluator is implemented using the recursive <em>eval_obj</em> function. The <em>eval_obj</em> function takes the List object representing the program and the global <em>env</em> variable (a simple hashmap) as the input. The function then starts processing the List object representing the program by iterating over each element of this list </p>
 <pre><code class="language-Rust">fn eval_obj(obj: &amp;Object, env: &amp;mut Rc&lt;RefCell&lt;Env&gt;&gt;) 

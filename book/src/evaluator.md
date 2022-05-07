@@ -4,7 +4,7 @@ Now comes the most exciting part of the project. Evaluation is the final step th
 
 ## Source
 
-[eval.rs](https://github.com/vishpat/lisp-rs/blob/0.0.1/src/lexer.rs)
+[eval.rs](https://github.com/vishpat/lisp-rs/blob/0.0.1/src/eval.rs)
 
 ## Code Walk Through
 

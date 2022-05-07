@@ -288,7 +288,7 @@ assert_eq!(
 <p>To cement your understanding of the Lexing process please go through the remaining tests in <strong>lexer.rs</strong></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="parser"><a class="header" href="#parser">Parser</a></h1>
 <h2 id="source-1"><a class="header" href="#source-1">Source</a></h2>
-<p><a href="https://github.com/vishpat/lisp-rs/blob/0.0.1/src/lexer.rs">parser.rs</a></p>
+<p><a href="https://github.com/vishpat/lisp-rs/blob/0.0.1/src/parser.rs">parser.rs</a></p>
 <h2 id="code-walk-through-1"><a class="header" href="#code-walk-through-1">Code Walk Through</a></h2>
 <p>The job of the parser is to take the vector of tokens and convert it into a recursive list structure (mentioned in the <a href="./introduction.html">introduction</a>). This recursive list structure is an in-memory representation of the Lisp program. </p>
 <h2 id="object-model"><a class="header" href="#object-model">Object model</a></h2>
@@ -361,7 +361,7 @@ assert_eq!(
 <div style="break-before: page; page-break-before: always;"></div><h1 id="evaluator"><a class="header" href="#evaluator">Evaluator</a></h1>
 <p>Now comes the most exciting part of the project. Evaluation is the final step that will produce the result for the Lisp program. At a high level, the evaluator function recursively walks the List-based structure created by the parser and evaluates each atomic object and list (recursively), combines these intermediate values, and produces the final result. </p>
 <h2 id="source-2"><a class="header" href="#source-2">Source</a></h2>
-<p><a href="https://github.com/vishpat/lisp-rs/blob/0.0.1/src/lexer.rs">eval.rs</a></p>
+<p><a href="https://github.com/vishpat/lisp-rs/blob/0.0.1/src/eval.rs">eval.rs</a></p>
 <h2 id="code-walk-through-2"><a class="header" href="#code-walk-through-2">Code Walk Through</a></h2>
 <p>The evaluator is implemented using the recursive <em>eval_obj</em> function. The <em>eval_obj</em> function takes the List object representing the program and the global <em>env</em> variable (a simple hashmap) as the input. The function then starts processing the List object representing the program by iterating over each element of this list </p>
 <pre><code class="language-Rust">fn eval_obj(obj: &amp;Object, env: &amp;mut Rc&lt;RefCell&lt;Env&gt;&gt;) 
@@ -536,7 +536,7 @@ return eval_obj(&amp;Object::List(new_body), &amp;mut new_env);
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="repl-1"><a class="header" href="#repl-1">REPL</a></h1>
 <h2 id="source-3"><a class="header" href="#source-3">Source</a></h2>
-<p><a href="https://github.com/vishpat/lisp-rs/blob/0.0.1/src/lexer.rs">main.rs</a></p>
+<p><a href="https://github.com/vishpat/lisp-rs/blob/0.0.1/src/main.rs">main.rs</a></p>
 <h2 id="code-walk-through-3"><a class="header" href="#code-walk-through-3">Code Walk Through</a></h2>
 <p>The REPL is the simplest part of the interpreter implementation. It uses the <a href="https://crates.io/crates/linefeed">linefeed</a> crate to implement the functionality.</p>
 <p>The REPL first creates an instance of <em>env</em> to hold the global variables for the interpreter.</p>

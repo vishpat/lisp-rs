@@ -2,7 +2,7 @@
 
 ## Source
 
-[main.rs](https://github.com/vishpat/lisp-rs/blob/0.0.1/src/lexer.rs)
+[main.rs](https://github.com/vishpat/lisp-rs/blob/0.0.1/src/main.rs)
 
 ## Code Walk Through
 
