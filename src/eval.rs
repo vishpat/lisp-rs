@@ -202,7 +202,7 @@ fn eval_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, S
     let head = &list[0];
     match head {
         Object::Symbol(s) => match s.as_str() {
-            "+" | "-" | "*" | "/" | "%" | "<" | ">" | "=" | "!=" => {
+            "+" | "-" | "*" | "/" | "%" | "<" | ">" | "==" | "!=" => {
                 return eval_binary_op(&list, env);
             }
             "define" => eval_define(&list, env),
@@ -257,6 +257,63 @@ mod tests {
         let result = eval("(+ 1 2)", &mut env).unwrap();
         assert_eq!(result, Object::Integer(3));
     }
+
+    #[test]
+    fn test_simple_sub() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(- 1.0 2)", &mut env).unwrap();
+        assert_eq!(result, Object::Float(-1.0));
+    }
+    
+    #[test]
+    fn test_str_add() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(+ \"Raleigh\" \"Durham\")", &mut env).unwrap();
+        assert_eq!(result, Object::String("RaleighDurham".to_string()));
+    }
+    
+    #[test]
+    fn test_str_eq_false() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(== \"Raleigh\" \"Durham\")", &mut env).unwrap();
+        assert_eq!(result, Object::Bool(false));
+    }
+
+    #[test]
+    fn test_str_eq_true() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(== \"Raleigh\" \"Raleigh\")", &mut env).unwrap();
+        assert_eq!(result, Object::Bool(true));
+    }
+
+    #[test]
+    fn test_greater_than_str() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(> \"Raleigh\" \"Durham\")", &mut env).unwrap();
+        assert_eq!(result, Object::Bool(true));
+    }
+
+    #[test]
+    fn test_greater_than_int() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(> 10 20)", &mut env).unwrap();
+        assert_eq!(result, Object::Bool(false));
+    }
+
+    #[test]
+    fn test_less_than_int() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(< 21.0 20.0)", &mut env).unwrap();
+        assert_eq!(result, Object::Bool(false));
+    }
+
+    #[test]
+    fn test_modulo() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(% 21.0 20.0)", &mut env).unwrap();
+        assert_eq!(result, Object::Float(1.0));
+    }
+
 
     #[test]
     fn test_area_of_a_circle() {
