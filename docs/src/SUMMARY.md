@@ -8,3 +8,4 @@ A simple Lisp interpreter in Rust
 - [Parser](./parser.md)
 - [Evaluator](./evaluator.md)
 - [REPL](./repl.md)
+- [What's Next](./next.md)

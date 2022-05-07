@@ -1,10 +1,10 @@
 # Evaluator
 
-Now comes the most exciting part of the project. Evaluation is the final step that will produce the result for the Lisp program. At a high level, the evaluator function recursively walks the List-based structure created by the parser and evaluates each atomic object and list (recursively), combines these results, and produces the final result. 
+Now comes the most exciting part of the project. Evaluation is the final step that will produce the result for the Lisp program. At a high level, the evaluator function recursively walks the List-based structure created by the parser and evaluates each atomic object and list (recursively), combines these intermediate values, and produces the final result. 
 
 ## Source
 
-**eval.rs**
+[eval.rs](https://github.com/vishpat/lisp-rs/blob/0.0.1/src/lexer.rs)
 
 ## Code Walk Through
 
@@ -66,6 +66,8 @@ The interpreter creates an instance of *Env* at the start of the program to stor
 ```
 
 ![Function Call](images/env.png)   
+
+
 
 This concept will become clearer as we will walk through the code.
 
@@ -135,22 +137,22 @@ In the example above the symbol *sqr* and the function object representing the l
 
 ### Binary operations
 
-If the head of the list matches a symbol, the list is evaluated on the basis of the type of the symbol. If the symbol matches a binary operation, for example 
+If the head of the list in the *eval_list* function matches a binary operator, the list is evaluated on the basis of the type of the binary operator, for example 
 
 ```Lisp
 (+ x y)
 ```
-the *eval_binary_op* function calls the *eval_obj* on the second and third element of the list and performs the binary operation on the evaluated values.
+the *eval_binary_op* function calls the *eval_obj* on the second and third element of the list and performs the binary **sum** operation on the evaluated values.
 
 ### If statement
 
-If the head of the list matches the *if* keyword, for example
+If the head of the list in the *eval_list* function matches the *if* keyword, for example
 
 ```Lisp
 (if (> x y) (x) (y))
 ```
 
-the *eval_if* function calls **eval_obj** on the second element of the list and depending upon whether the evaluated value is true or false, calls the eval_obj on the third or fourth element of the list and returns the corresponding value
+the *eval_if* function calls **eval_obj** on the second element of the list and depending upon whether the evaluated value is true or false, calls the eval_obj on either the third or fourth element of the list and returns the value
 
 ```
 let cond_obj = eval_obj(&list[1], env)?;
@@ -168,13 +170,13 @@ if cond == true {
 
 
 ### Lambda
-As mentioned earlier, the *lambda* (or function) object is consists of two vectors
+As mentioned earlier, the *lambda* (or function) object consists of two vectors
 
 ```Rust
 Lambda(Vec<String>, Vec<Object>)
 ```
 
-If the head of the list matches the *lambda* keyword, for example
+If the head of the list in the *eval_list* function matches the *lambda* keyword, for example
 
 ```Lisp
 (lambda (x) (* x x))
@@ -214,7 +216,7 @@ The evaluated parameter and body vector are returned as the *lambda* object
 
 ### Function Call
 
-If the head of the list is a Symbol object and it does not match any of the keywords, the interpreter assumes that the Symbol object maps to a Lambda (function object). An example of the function call in Lisp is as follows
+If the head of the list is a Symbol object and it does not match any of the aforementioned keywords or binary operators, the interpreter assumes that the Symbol object maps to a Lambda (function object). An example of the function call in Lisp is as follows
 
 ```Lisp
 (find_max a b c)
@@ -229,7 +231,7 @@ if lamdba.is_none() {
 }
 ```
 
-If the function object is found, a new *env* object is created. This new *env* object has a pointer to the parent *env* object.   
+If the function object is found, a new *env* object is created. This new *env* object has a pointer to the parent *env* object. This is required to get the values of the variables not defined in the scope of the function.  
 
 ```Rust
 let mut new_env = Rc::new(
@@ -253,8 +255,6 @@ Finally, the function body is evaluated by passing the new_env, which contains t
 let new_body = body.clone();
 return eval_obj(&Object::List(new_body), &mut new_env);
 ```
-
-
 
 
  

@@ -1,8 +1,8 @@
 # Overview
 
-This project implements an interpreter, in Rust, for a small subset of [Scheme](https://en.wikipedia.org/wiki/Scheme_(programming_language)), a Lisp dialect.
+This project implements an interpreter, in Rust, for a small subset of [Scheme](https://en.wikipedia.org/wiki/Scheme_(programming_language)), a Lisp dialect. However, the main goal of the project is to make sure the reader understands how the interpreter was implemented using Rust.
 
-The project was inspired by Peter Norvig's article [**(How to Write a (Lisp) Interpreter (in Python))**](http://www.norvig.com/lispy.html) and aims to make a user understand how a Lisp interpreter works by implementing one in Rust. Rust's rich programming constructs such as enum, pattern matching, and error handling make it easy and a joy to implement this bare-bone interpreter. 
+The project was inspired by Peter Norvig's article [**(How to Write a (Lisp) Interpreter (in Python))**](http://www.norvig.com/lispy.html) and [**Writing An Interpreter In Go**](https://interpreterbook.com). This document serves as a commentary on the [code](https://github.com/vishpat/lisp-rs/tree/0.0.1) that implements the interpreter. Rust's rich programming constructs such as enum, pattern matching, and error handling make it easy and a joy to implement this bare-bone interpreter. 
 
 ## Pre-requistes
 To make the most out of this project, it is expected that the user is aware of the following Computer Science concepts
@@ -63,13 +63,24 @@ The interpreter will be implemented from scratch and without the help of any too
 
 - [Lexer](./lexer.md) ~ 20 lines of code
 - [Parser](./parser.md) ~ 60 lines of code
-- [Evaluator](./evaluator.md) ~ 150 lines of code
-- [REPL](./repl.md) ~ 40 lines of code
+- [Evaluator](./evaluator.md) ~ 170 lines of code
+- [REPL](./repl.md) ~ 30 lines of code
 
 The best way to understand the implementation of the interpreter is to check out the code and walk through it while reading this document. 
 
 ```
 git clone https://github.com/vishpat/lisp-rs
+git checkout 0.0.1
 ```
 
-Once you thoroughly understand the implementation, you will be equipped to add new features to it, such as support for new data types like strings, floating-point numbers, lists or functional programming constructs such as map, filter, reduce functions, etc. 
+Once you thoroughly understand the implementation, you will be equipped to add new features to it, such as support for new data types like strings, floating-point numbers, lists, or functional programming constructs such as map, filter, reduce functions, etc. 
+
+### REPL
+
+To run the interpreter and get its REPL (Read-Eval-Print-Loop)
+
+```
+cargo run
+```
+
+
