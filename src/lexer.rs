@@ -42,11 +42,9 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
             "(" => tokens.push(Token::LParen),
             ")" => tokens.push(Token::RParen),
             _ => {
-                let mut chars = word.chars();
-                let first_char = chars.next().unwrap();
-                if first_char.is_digit(10) {
-                    let integer = word.parse::<i64>().unwrap();
-                    tokens.push(Token::Integer(integer));
+                let i = word.parse::<i64>();
+                if i.is_ok() {
+                    tokens.push(Token::Integer(i.unwrap()));
                 } else {
                     tokens.push(Token::Symbol(word.to_string()));
                 }
