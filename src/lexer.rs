@@ -58,8 +58,7 @@ pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
                     continue;
                 }
 
-                if word.chars().nth(0).unwrap() == '"' && 
-                     word.chars().last().unwrap() == '"' {
+                if word.chars().nth(0).unwrap() == '"' && word.chars().last().unwrap() == '"' {
                     let s = String::from(&word[1..word.len() - 1]);
                     tokens.push(Token::String(s));
                     continue;
