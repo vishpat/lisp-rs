@@ -66,4 +66,10 @@ The interpreter will be implemented from scratch and without the help of any too
 - [Evaluator](./evaluator.md) ~ 150 lines of code
 - [REPL](./repl.md) ~ 40 lines of code
 
-Once you thoroughly understand the implementation, you will be equipped to add new features to it, such as support for new data types such as strings, floating-point numbers or functional programming constructs such as map, filter, reduce functions, etc. 
+The best way to understand the implementation of the interpreter is to check out the code and walk through it while reading this document. 
+
+```
+git clone https://github.com/vishpat/lisp-rs
+```
+
+Once you thoroughly understand the implementation, you will be equipped to add new features to it, such as support for new data types like strings, floating-point numbers, lists or functional programming constructs such as map, filter, reduce functions, etc. 

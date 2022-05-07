@@ -8,7 +8,7 @@ Now comes the most exciting part of the project. Evaluation is the final step th
 
 ## Code Walk Through
 
-The evaluator is implemented using the recursive *eval_obj* function. The *eval_obj* function takes the List object representing the program and the global *env* variable as the input. The function then starts processing the List object representing the program by iterating over each element of this list 
+The evaluator is implemented using the recursive *eval_obj* function. The *eval_obj* function takes the List object representing the program and the global *env* variable (a simple hashmap) as the input. The function then starts processing the List object representing the program by iterating over each element of this list 
 
 ```Rust
 fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) 
@@ -31,7 +31,7 @@ In the case of the atomic objects such as an integer and boolean, the evaluator 
 
 Before understanding the *eval_symbol* function, it is important to understand the design of how variables are implemented for the Lisp interpreter.
 
-The variables are just *string* symbols assigned to values and they are created using the **define** keyword. Note a variable can be assigned atomic values such as integer or a boolean or it can be assigned function objects 
+The variables are just *string* labels assigned to values and they are created using the **define** keyword. Note a variable can be assigned atomic values such as integer or a boolean or it can be assigned function objects 
 
 ```Lisp
 ( 

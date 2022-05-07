@@ -6,7 +6,7 @@
 
 ## Code Walk Through
 
-The job of the parser is to take the vector of tokens and convert it into a recursive list structure (mentioned in the *crux* section of the [overview](./overview.md)). This recursive list structure is an in-memory representation of the Lisp program. 
+The job of the parser is to take the vector of tokens and convert it into a recursive list structure (mentioned in the [introduction](./introduction.md)). This recursive list structure is an in-memory representation of the Lisp program. 
 
 ## Object model
 Before diving into the details of how the recursive list structure is created, we need to first define the objects that will make up the elements of the list. This is done in the *object* Rust module with an enum defined as follows
@@ -26,7 +26,7 @@ pub enum Object {
 - *Integer*: A signed 64-bit integer
 - *Bool*: A boolean value
 - *Symbol*: A Lisp symbol, similar to the Symbol token
-- *Lambda*: Function object, with the first vector representing the parameters and the second vector representing the body of the function. This object is not used during parsing but will be used during the evaluation phase of the interpreter.
+- *Lambda*: Function object, with the first vector representing the parameter labels and the second vector representing the body of the function. This object is not used during parsing but will be used during the evaluation phase of the interpreter.
 - *List*: List object
 
 ## Parser

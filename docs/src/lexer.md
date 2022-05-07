@@ -6,7 +6,7 @@
 
 ## Code Walk Through
 
-**Lexer** is a component of the interpreter that takes the program text and converts it to a stream of atomic units also known as **tokens**. Every token has a type and may even have a value associated with it. In the case of our interpreter, there are only four types of tokens. The four tokens can be represented using a Rust enum as follows.
+**Lexer** is a component of the interpreter that takes the program text and converts it to a stream of atomic units known as **tokens**. Every token has a type and may even have a value associated with it. In the case of our interpreter, there are four types of tokens. The four tokens can be represented using a Rust enum as follows.
 
 ```Rust
 pub enum Token {
