@@ -238,8 +238,48 @@ fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
 }
 
 fn eval_filter(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
-    let mut new_list = Vec::new();
-    Ok(Object::ListData(new_list))
+    if list.len() != 3 {
+        return Err(format!("Invalid number of arguments for filter {:?}", list));
+    }
+
+    let lambda = eval_obj(&list[1], env)?;
+    let arg_list = eval_obj(&list[2], env)?;
+
+    let (params, body) = match lambda {
+        Object::Lambda(p, b) => {
+            if p.len() != 1 {
+                return Err(format!(
+                    "Invalid number of parameters for map function {:?}",
+                    p
+                ));
+            }
+            (p, b)
+        }
+        _ => return Err(format!("Not a lambda while evaluating map: {}", lambda)),
+    };
+
+    let args = match arg_list {
+        Object::ListData(list) => list,
+        _ => return Err(format!("Invalid map arguments: {:?}", list)),
+    };
+
+    let func_param = &params[0];
+    let mut result_list = Vec::new();
+    for arg in args.iter() {
+        let val = eval_obj(&arg, env)?;
+        let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+        new_env.borrow_mut().set(&func_param, val.clone());
+        let new_body = body.clone();
+        let result_obj = eval_obj(&Object::List(new_body), &mut new_env)?;
+        let result = match result_obj {
+            Object::Bool(b) => b,
+            _ => return Err(format!("Invalid filter result: {}", result_obj)),
+        };
+        if result {
+            result_list.push(val);
+        }
+    }
+    Ok(Object::ListData(result_list))
 }
 
 fn eval_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
@@ -410,6 +450,28 @@ mod tests {
                 Object::Integer(9),
                 Object::Integer(16),
                 Object::Integer(25)
+            ])])
+        );
+    }
+
+    #[test]
+    fn test_filter() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+            (
+                (define odd (lambda (v) (== 1 (% v 2))))
+                (define l (list 1 2 3 4 5))
+                (filter odd l)
+            )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(vec![Object::ListData(vec![
+                Object::Integer(1),
+                Object::Integer(3),
+                Object::Integer(5)
             ])])
         );
     }
