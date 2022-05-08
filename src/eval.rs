@@ -96,6 +96,14 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
                 }
                 _ => Err(format!("Invalid types for != operator {} {}", left, right)),
             },
+            "&" => match (left, right) {
+                (Object::Bool(l), Object::Bool(r)) => Ok(Object::Bool(*l && *r)),
+                _ => Err(format!("Invalid types for && operator {} {}", left, right)),
+            },
+            "|" => match (left, right) {
+                (Object::Bool(l), Object::Bool(r)) => Ok(Object::Bool(*l || *r)),
+                _ => Err(format!("Invalid types for || operator {} {}", left, right)),
+            },
             _ => Err(format!("Invalid infix operator: {}", s)),
         },
         _ => Err(format!("Operator must be a symbol")),
@@ -332,7 +340,7 @@ fn eval_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, S
     let head = &list[0];
     match head {
         Object::Symbol(s) => match s.as_str() {
-            "+" | "-" | "*" | "/" | "%" | "<" | ">" | "==" | "!=" => {
+            "+" | "-" | "*" | "/" | "%" | "<" | ">" | "==" | "!=" | "&" | "|" => {
                 return eval_binary_op(&list, env);
             }
             "define" => eval_define(&list, env),
