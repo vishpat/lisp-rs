@@ -199,11 +199,17 @@ fn eval_symbol(s: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
 }
 
 fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    if list.len() != 3 {
+        return Err(format!("Invalid number of arguments for map {:?}", list));
+    }
+
     let mut new_list = Vec::new();
     let mut params = Vec::new();
     let mut body = Vec::new();
 
     let func = eval_obj(&list[1], env)?;
+    let arg_list = eval_obj(&list[2], env)?;
+
     match func {
         Object::Lambda(p, b) => {
             if p.len() != 1 {
@@ -217,12 +223,17 @@ fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
         }
         _ => return Err(format!("Not a lambda while evaluating map: {}", func)),
     }
-    let param = &params[0];
+    let func_param = &params[0];
 
-    for arg in list[2..].iter() {
+    let args = match arg_list {
+        Object::ListData(list) => list,
+        _ => return Err(format!("Invalid map arguments: {:?}", list)),
+    };
+
+    for arg in args.iter() {
         let val = eval_obj(&arg, env)?;
         let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
-        new_env.borrow_mut().set(&param, val);
+        new_env.borrow_mut().set(&func_param, val);
         let new_body = body.clone();
         let result = eval_obj(&Object::List(new_body), &mut new_env)?;
         new_list.push(result);
