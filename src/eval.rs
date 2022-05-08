@@ -317,20 +317,25 @@ fn eval_reduce(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     };
 
     if args.len() < 2 {
-        return Err(format!("Invalid number of arguments for reduce: {:?}", args));
+        return Err(format!(
+            "Invalid number of arguments for reduce: {:?}",
+            args
+        ));
     }
 
     let reduce_param1 = &params[0];
-    let reduce_param2 = &params[1]; 
+    let reduce_param2 = &params[1];
     let mut accumulator = eval_obj(&args[0], env)?;
 
     for arg in args[1..].iter() {
         let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
-        new_env.borrow_mut().set(&reduce_param1, accumulator.clone());
-        
+        new_env
+            .borrow_mut()
+            .set(&reduce_param1, accumulator.clone());
+
         let val = eval_obj(&arg, env)?;
         new_env.borrow_mut().set(&reduce_param2, val.clone());
-        
+
         let new_body = body.clone();
         accumulator = eval_obj(&Object::List(new_body), &mut new_env)?;
     }
@@ -529,6 +534,21 @@ mod tests {
                 Object::Integer(5)
             ])])
         );
+    }
+
+    #[test]
+    fn test_reduce() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+            (
+                (define odd (lambda (v) (== 1 (% v 2))))
+                (define l (list 1 2 3 4 5))
+                (reduce (lambda (x y) (| x y)) (map odd l))
+            )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(result, Object::List(vec![Object::Bool(true),]));
     }
 
     #[test]
