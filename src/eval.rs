@@ -282,6 +282,52 @@ fn eval_filter(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     Ok(Object::ListData(result_list))
 }
 
+fn eval_reduce(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    if list.len() != 3 {
+        return Err(format!("Invalid number of arguments for reduce {:?}", list));
+    }
+
+    let lambda = eval_obj(&list[1], env)?;
+    let arg_list = eval_obj(&list[2], env)?;
+
+    let (params, body) = match lambda {
+        Object::Lambda(p, b) => {
+            if p.len() != 2 {
+                return Err(format!(
+                    "Invalid number of parameters for reduce function {:?}",
+                    p
+                ));
+            }
+            (p, b)
+        }
+        _ => return Err(format!("Not a lambda while evaluating map: {}", lambda)),
+    };
+
+    let args = match arg_list {
+        Object::ListData(list) => list,
+        _ => return Err(format!("Invalid map arguments: {:?}", list)),
+    };
+
+    if args.len() < 2 {
+        return Err(format!("Invalid number of arguments for reduce: {:?}", args));
+    }
+
+    let reduce_param1 = &params[0];
+    let reduce_param2 = &params[1]; 
+    let mut accumulator = eval_obj(&args[0], env)?;
+
+    for arg in args[1..].iter() {
+        let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+        new_env.borrow_mut().set(&reduce_param1, accumulator.clone());
+        
+        let val = eval_obj(&arg, env)?;
+        new_env.borrow_mut().set(&reduce_param2, val.clone());
+        
+        let new_body = body.clone();
+        accumulator = eval_obj(&Object::List(new_body), &mut new_env)?;
+    }
+    Ok(accumulator)
+}
 fn eval_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let head = &list[0];
     match head {
@@ -296,6 +342,7 @@ fn eval_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, S
             "lambda" => eval_function_definition(&list),
             "map" => eval_map(&list, env),
             "filter" => eval_filter(&list, env),
+            "reduce" => eval_reduce(&list, env),
             _ => eval_function_call(&s, &list, env),
         },
         _ => {
