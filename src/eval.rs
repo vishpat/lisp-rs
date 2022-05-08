@@ -203,14 +203,10 @@ fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
         return Err(format!("Invalid number of arguments for map {:?}", list));
     }
 
-    let mut new_list = Vec::new();
-    let mut params = Vec::new();
-    let mut body = Vec::new();
-
-    let func = eval_obj(&list[1], env)?;
+    let lambda = eval_obj(&list[1], env)?;
     let arg_list = eval_obj(&list[2], env)?;
 
-    match func {
+    let (params, body) = match lambda {
         Object::Lambda(p, b) => {
             if p.len() != 1 {
                 return Err(format!(
@@ -218,27 +214,27 @@ fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
                     p
                 ));
             }
-            params = p;
-            body = b;
+            (p, b)
         }
-        _ => return Err(format!("Not a lambda while evaluating map: {}", func)),
-    }
-    let func_param = &params[0];
+        _ => return Err(format!("Not a lambda while evaluating map: {}", lambda)),
+    };
 
     let args = match arg_list {
         Object::ListData(list) => list,
         _ => return Err(format!("Invalid map arguments: {:?}", list)),
     };
 
+    let func_param = &params[0];
+    let mut result_list = Vec::new();
     for arg in args.iter() {
         let val = eval_obj(&arg, env)?;
         let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
         new_env.borrow_mut().set(&func_param, val);
         let new_body = body.clone();
         let result = eval_obj(&Object::List(new_body), &mut new_env)?;
-        new_list.push(result);
+        result_list.push(result);
     }
-    Ok(Object::ListData(new_list))
+    Ok(Object::ListData(result_list))
 }
 
 fn eval_filter(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
@@ -400,12 +396,22 @@ mod tests {
         let program = "
             (
                 (define sqr (lambda (r) (* r r)))
-                (define list (list 1 2 3 4 5))
-                (map sqr list)
+                (define l (list 1 2 3 4 5))
+                (map sqr l)
             )
         ";
 
         let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(vec![Object::ListData(vec![
+                Object::Integer(1),
+                Object::Integer(4),
+                Object::Integer(9),
+                Object::Integer(16),
+                Object::Integer(25)
+            ])])
+        );
     }
 
     #[test]
