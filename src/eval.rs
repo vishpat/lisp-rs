@@ -66,6 +66,8 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
             "<" => match (left, right) {
                 (Object::Integer(l), Object::Integer(r)) => Ok(Object::Bool(l < r)),
                 (Object::Float(l), Object::Float(r)) => Ok(Object::Bool(l < r)),
+                (Object::Integer(l), Object::Float(r)) => Ok(Object::Bool((*l as f64) < *r)),
+                (Object::Float(l), Object::Integer(r)) => Ok(Object::Bool(l < &(*r as f64))),
                 (Object::String(l), Object::String(r)) => {
                     Ok(Object::Bool(l.cmp(&r) == Ordering::Less))
                 }
@@ -437,6 +439,13 @@ mod tests {
     fn test_greater_than_str() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let result = eval("(> \"Raleigh\" \"Durham\")", &mut env).unwrap();
+        assert_eq!(result, Object::Bool(true));
+    }
+
+    #[test]
+    fn test_less_than_str() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(< \"abcd\" \"abef\")", &mut env).unwrap();
         assert_eq!(result, Object::Bool(true));
     }
 
