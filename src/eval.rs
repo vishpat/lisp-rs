@@ -100,11 +100,11 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
             },
             "&" => match (left, right) {
                 (Object::Bool(l), Object::Bool(r)) => Ok(Object::Bool(*l && *r)),
-                _ => Err(format!("Invalid types for && operator {} {}", left, right)),
+                _ => Err(format!("Invalid types for & operator {} {}", left, right)),
             },
             "|" => match (left, right) {
                 (Object::Bool(l), Object::Bool(r)) => Ok(Object::Bool(*l || *r)),
-                _ => Err(format!("Invalid types for || operator {} {}", left, right)),
+                _ => Err(format!("Invalid types for | operator {} {}", left, right)),
             },
             _ => Err(format!("Invalid infix operator: {}", s)),
         },
