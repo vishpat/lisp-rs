@@ -382,9 +382,9 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
         Object::Bool(_) => Ok(obj.clone()),
         Object::Integer(n) => Ok(Object::Integer(*n)),
         Object::Float(n) => Ok(Object::Float(*n)),
-        Object::String(s) => Ok(Object::String(s.clone())),
+        Object::String(s) => Ok(Object::String(s.to_string())),
         Object::Symbol(s) => eval_symbol(s, env),
-        Object::ListData(l) => eval_list_data(l, env),
+        Object::ListData(l) => Ok(Object::ListData(l.to_vec())),
     }
 }
 
