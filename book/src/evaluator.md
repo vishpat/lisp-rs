@@ -149,7 +149,7 @@ the *eval_binary_op* function calls the *eval_obj* on the second and third eleme
 If the head of the list in the *eval_list* function matches the *if* keyword, for example
 
 ```Lisp
-(if (> x y) (x) (y))
+(if (> x y) x y)
 ```
 
 the *eval_if* function calls **eval_obj** on the second element of the list and depending upon whether the evaluated value is true or false, calls the eval_obj on either the third or fourth element of the list and returns the value
