@@ -246,7 +246,7 @@ env.borrow_mut().set(&amp;sym, val);
 <p>the <em>eval_binary_op</em> function calls the <em>eval_obj</em> on the second and third element of the list and performs the binary <strong>sum</strong> operation on the evaluated values.</p>
 <h3 id="if-statement"><a class="header" href="#if-statement">If statement</a></h3>
 <p>If the head of the list in the <em>eval_list</em> function matches the <em>if</em> keyword, for example</p>
-<pre><code class="language-Lisp">(if (&gt; x y) (x) (y))
+<pre><code class="language-Lisp">(if (&gt; x y) x y)
 </code></pre>
 <p>the <em>eval_if</em> function calls <strong>eval_obj</strong> on the second element of the list and depending upon whether the evaluated value is true or false, calls the eval_obj on either the third or fourth element of the list and returns the value</p>
 <pre><code>let cond_obj = eval_obj(&amp;list[1], env)?;
