@@ -6,9 +6,9 @@ Now comes the most exciting part of the project. Evaluation is the final step th
 
 [eval.rs](https://github.com/vishpat/lisp-rs/blob/0.0.1/src/eval.rs)
 
-## Code Walk Through
+## Code Walkthrough
 
-The evaluator is implemented using the recursive *eval_obj* function. The *eval_obj* function takes the List object representing the program and the global *env* variable (a simple hashmap) as the input. The function then starts processing the List object representing the program by iterating over each element of this list 
+The evaluator is implemented using the recursive *eval_obj* function. The *eval_obj* function takes the List object representing the program and the global *env* variable (a simple hashmap) as the input. The function then starts processing the List object representing the program by iterating over each element of this list. 
 
 ```Rust
 fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) 
@@ -31,7 +31,7 @@ In the case of the atomic objects such as an integer and boolean, the evaluator 
 
 Before understanding the *eval_symbol* function, it is important to understand the design of how variables are implemented for the Lisp interpreter.
 
-The variables are just *string* labels assigned to values and they are created using the **define** keyword. Note a variable can be assigned atomic values such as integer or a boolean or it can be assigned function objects 
+The variables are just *string* labels assigned to values and they are created using the **define** keyword. Note a variable can be assigned atomic values such as integer or a boolean or it can be assigned function objects. 
 
 ```Lisp
 ( 
@@ -49,7 +49,7 @@ pub struct Env {
 }
 ```
 
-The interpreter creates an instance of *Env* at the start of the program to store the global variable definitions. In addition, for every function call, the interpreter creates a new instance of env and uses the new instance to evaluate the function call. This new instance of env contains the function parameters as well as a *back* pointer to the *parent* env instance from where the function is called as shown below with an example
+The interpreter creates an instance of *Env* at the start of the program to store the global variable definitions. In addition, for every function call, the interpreter creates a new instance of env and uses the new instance to evaluate the function call. This new instance of env contains the function parameters as well as a *back* pointer to the *parent* env instance from where the function is called as shown below with an example:
 
 ```Lisp
 (
@@ -115,13 +115,13 @@ This function peeks at the head of the list and if the head does not match the s
 
 ### Variable definitions
 
-If the head of the list in the *eval_list* function matches the *define* keyword, for example
+If the head of the list in the *eval_list* function matches the *define* keyword, for example:
 
 ```Lisp
 (define sqr (lambda (x) (* x x)))
 ```
 
-the *eval_define* function calls *eval_obj* on the third argument of the list and assigns the evaluated object value to the symbol defined by the second argument in the list. The symbol and its object value are then stored in the current *env*. 
+The *eval_define* function calls *eval_obj* on the third argument of the list and assigns the evaluated object value to the symbol defined by the second argument in the list. The symbol and its object value are then stored in the current *env*. 
 
 ```Rust
 let sym = match &list[1] {
@@ -137,7 +137,7 @@ In the example above the symbol *sqr* and the function object representing the l
 
 ### Binary operations
 
-If the head of the list in the *eval_list* function matches a binary operator, the list is evaluated on the basis of the type of the binary operator, for example 
+If the head of the list in the *eval_list* function matches a binary operator, the list is evaluated on the basis of the type of the binary operator, for example: 
 
 ```Lisp
 (+ x y)
@@ -146,13 +146,13 @@ the *eval_binary_op* function calls the *eval_obj* on the second and third eleme
 
 ### If statement
 
-If the head of the list in the *eval_list* function matches the *if* keyword, for example
+If the head of the list in the *eval_list* function matches the *if* keyword, for example:
 
 ```Lisp
 (if (> x y) x y)
 ```
 
-the *eval_if* function calls **eval_obj** on the second element of the list and depending upon whether the evaluated value is true or false, calls the eval_obj on either the third or fourth element of the list and returns the value
+The *eval_if* function calls **eval_obj** on the second element of the list and depending upon whether the evaluated value is true or false, calls the eval_obj on either the third or fourth element of the list and returns the value:
 
 ```
 let cond_obj = eval_obj(&list[1], env)?;
@@ -170,18 +170,18 @@ if cond == true {
 
 
 ### Lambda
-As mentioned earlier, the *lambda* (or function) object consists of two vectors
+As mentioned earlier, the *lambda* (or function) object consists of two vectors:
 
 ```Rust
 Lambda(Vec<String>, Vec<Object>)
 ```
 
-If the head of the list in the *eval_list* function matches the *lambda* keyword, for example
+If the head of the list in the *eval_list* function matches the *lambda* keyword, for example:
 
 ```Lisp
 (lambda (x) (* x x))
 ```
-the *eval_function_definition* function evaluates the second element of the list as a vector of parameter names. 
+The *eval_function_definition* function evaluates the second element of the list as a vector of parameter names. 
 
 ```Rust
 let params = match &list[1] {
@@ -212,11 +212,11 @@ let body = match &list[2] {
 Ok(Object::Lambda(params, body))
 ``` 
 
-The evaluated parameter and body vector are returned as the *lambda* object
+The evaluated parameter and body vector are returned as the *lambda* object.
 
 ### Function Call
 
-If the head of the list is a Symbol object and it does not match any of the aforementioned keywords or binary operators, the interpreter assumes that the Symbol object maps to a Lambda (function object). An example of the function call in Lisp is as follows
+If the head of the list is a Symbol object and it does not match any of the aforementioned keywords or binary operators, the interpreter assumes that the Symbol object maps to a Lambda (function object). An example of the function call in Lisp is as follows:
 
 ```Lisp
 (find_max a b c)
@@ -249,7 +249,7 @@ for (i, param) in params.iter().enumerate() {
 }
 ```
 
-Finally, the function body is evaluated by passing the new_env, which contains the parameters to the function
+Finally, the function body is evaluated by passing the new_env, which contains the parameters to the function:
 
 ```Rust
 let new_body = body.clone();
