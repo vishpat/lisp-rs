@@ -201,10 +201,17 @@ fn eval_function_call(
 }
 
 fn eval_symbol(s: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
-    let val = env.borrow_mut().get(s);
+    let val = match s {
+        "#t" => return Ok(Object::Bool(true)),
+        "#f" => return Ok(Object::Bool(false)),
+        "#nil" => return Ok(Object::Void),
+        _ => env.borrow_mut().get(s),
+    };
+
     if val.is_none() {
         return Err(format!("Unbound symbol: {}", s));
     }
+
     Ok(val.unwrap().clone())
 }
 
