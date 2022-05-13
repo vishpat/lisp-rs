@@ -47,7 +47,6 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
 
     while chars.len() > 0 {
         let mut ch = chars.remove(0);
-        println!("Current character {}", ch);
         match ch {
             '(' => tokens.push(Token::LParen),
             ')' => tokens.push(Token::RParen),
@@ -65,16 +64,18 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
             }
             _ => {
                 let mut word = String::new();
-                while chars.len() > 0 && !ch.is_whitespace() && ch != '(' && ch != ')'
-                {
+                while chars.len() > 0 && !ch.is_whitespace() && ch != '(' && ch != ')' {
                     word.push(ch);
+                    let peek = chars[0];
+                    if peek == '(' || peek == ')' {
+                        break;
+                    }
+
                     ch = chars.remove(0);
                 }
 
                 if word.is_empty() {
                     continue;
-                } else {
-                    println!("Word: {}", word);
                 }
 
                 let i = word.parse::<i64>();
