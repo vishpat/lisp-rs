@@ -37,7 +37,68 @@ impl fmt::Display for TokenError {
     }
 }
 
-pub fn tokenize(program: &str) -> Result<Vec<Token>, TokenError> {
+pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
+    let mut tokens = Vec::new();
+    let mut chars = input.chars().collect::<Vec<char>>();
+
+    if chars.is_empty() {
+        return Ok(tokens);
+    }
+
+    while chars.len() > 0 {
+        let mut ch = chars.remove(0);
+        match ch {
+            '(' => tokens.push(Token::LParen),
+            ')' => tokens.push(Token::RParen),
+            '"' => {
+                let mut word = String::new();
+                while chars.len() > 0 && chars[0] != '"' {
+                    word.push(chars.remove(0));
+                }
+
+                if chars.len() > 0 {
+                    chars.remove(0);
+                }
+
+                tokens.push(Token::String(word));
+            }
+            _ => {
+                let mut word = String::new();
+                while chars.len() > 0 && !ch.is_whitespace() && ch != '(' && ch != ')' {
+                    word.push(ch);
+                    let peek = chars[0];
+                    if peek == '(' || peek == ')' {
+                        break;
+                    }
+
+                    ch = chars.remove(0);
+                }
+
+                if word.is_empty() {
+                    continue;
+                }
+
+                let i = word.parse::<i64>();
+                if i.is_ok() {
+                    tokens.push(Token::Integer(i.unwrap()));
+                    continue;
+                }
+
+                let f = word.parse::<f64>();
+                if f.is_ok() {
+                    tokens.push(Token::Float(f.unwrap()));
+                    continue;
+                }
+
+                tokens.push(Token::Symbol(word.to_string()));
+            }
+        }
+    }
+
+    Ok(tokens)
+}
+
+pub fn tokenize2(program: &str) -> Result<Vec<Token>, TokenError> {
     let program2 = program.replace("(", " ( ").replace(")", " ) ");
     let words = program2.split_whitespace();
     let mut tokens: Vec<Token> = Vec::new();

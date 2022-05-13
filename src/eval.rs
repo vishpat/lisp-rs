@@ -457,6 +457,32 @@ mod tests {
     }
 
     #[test]
+    fn test_str_with_spaces() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(+ \"Raleigh \" \"Durham\")", &mut env).unwrap();
+        assert_eq!(result, Object::String("Raleigh Durham".to_string()));
+    }
+
+    #[test]
+    fn test_str_with_spaces_2() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (
+            (define fruits \"apples mangoes bananas \")
+            (define vegetables \"carrots broccoli\")
+            (+ fruits vegetables)
+        )
+        ";
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(vec![Object::String(
+                "apples mangoes bananas carrots broccoli".to_string()
+            )])
+        );
+    }
+
+    #[test]
     fn test_greater_than_int() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let result = eval("(> 10 20)", &mut env).unwrap();
