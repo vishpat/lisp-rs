@@ -4,9 +4,9 @@
 
 [lexer.rs](https://github.com/vishpat/lisp-rs/blob/0.0.1/src/lexer.rs)
 
-## Code Walk Through
+## Code Walkthrough
 
-**Lexer** is a component of the interpreter that takes the program text and converts it to a stream of atomic units known as **tokens**. Every token has a type and may even have a value associated with it. In the case of our interpreter, there are four types of tokens. The four tokens can be represented using a Rust enum as follows.
+**Lexer** is a component of the interpreter that takes the program text and converts it to a stream of atomic units known as **tokens**. Every token has a type and may even have a value associated with it. In the case of our interpreter, there are four types of tokens. The four tokens can be represented using a Rust enum as follows:
 
 ```Rust
 pub enum Token {
@@ -29,13 +29,13 @@ The first step in implementing a lexer is to replace the parenthesis with an ext
 (define sqr (* x x))
 ```
 
-will get converted to
+will be converted to,
 
 ```Lisp
 ( define sqr ( * x x ) )
 ```
 
-With this simple trick, the process of tokenization involves splitting the Lisp program with whitespace. 
+With this simple trick,, the process of tokenization involves splitting the Lisp program with whitespace. 
 
 ```Rust
     let program2 = program.replace("(", " ( ")
@@ -43,7 +43,7 @@ With this simple trick, the process of tokenization involves splitting the Lisp 
     let words = program2.split_whitespace();
 ```
 
-Once the words for the program are obtained, they can be converted into tokens using Rust's pattern matching as follows
+Once the words for the program are obtained, they can be converted into tokens using Rust's pattern matching as follows:
 
 ```Rust
 let mut tokens: Vec<Token> = Vec::new();
@@ -88,4 +88,4 @@ assert_eq!(
 );
 ```
 
-To cement your understanding of the Lexing process please go through the remaining tests in **lexer.rs**
+To cement your understanding of the Lexing process, please go through the remaining tests in **lexer.rs**

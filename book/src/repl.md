@@ -4,7 +4,7 @@
 
 [main.rs](https://github.com/vishpat/lisp-rs/blob/0.0.1/src/main.rs)
 
-## Code Walk Through
+## Code Walkthrough
 
 The REPL is the simplest part of the interpreter implementation. It uses the [linefeed](https://crates.io/crates/linefeed) crate to implement the functionality.
 

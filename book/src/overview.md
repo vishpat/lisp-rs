@@ -4,7 +4,7 @@ The [lisp-rs](https://github.com/vishpat/lisp-rs) project implements an interpre
 
 The project was inspired by Peter Norvig's article [**(How to Write a (Lisp) Interpreter (in Python))**](http://www.norvig.com/lispy.html) and the book [**Writing An Interpreter In Go**](https://interpreterbook.com). This document serves as a commentary on the [code](https://github.com/vishpat/lisp-rs/tree/0.0.1) that implements the interpreter. Rust's rich programming constructs such as enum, pattern matching, and error handling make it easy and a joy to implement this bare-bone interpreter. 
 
-## Pre-requistes
+## Prerequisites
 To make the most out of this project, it is expected that the user is aware of the following Computer Science concepts
 
 - [Lists](https://en.wikipedia.org/wiki/List_(abstract_data_type))
@@ -38,7 +38,7 @@ In order to keep the interpreter simple and its implementation easy to understan
 
 ### Examples
 
-Following are some of the sample programs that you will be able run using the interpreter
+Following are some of the sample programs that you will be able to run using the interpreter
 
 ```lisp
     (

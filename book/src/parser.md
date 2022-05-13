@@ -4,7 +4,7 @@
 
 [parser.rs](https://github.com/vishpat/lisp-rs/blob/0.0.1/src/parser.rs)
 
-## Code Walk Through
+## Code Walkthrough
 
 The job of the parser is to take the vector of tokens and convert it into a recursive list structure (mentioned in the [introduction](./introduction.md)). This recursive list structure is an in-memory representation of the Lisp program. 
 
@@ -70,7 +70,7 @@ while !tokens.is_empty() {
 
 ## Testing
 
-The above parsing code can be unit tested as follows
+The above parsing code can be unit tested as follows:
 
 ```Rust
 let list = parse("(+ 1 2)").unwrap();
