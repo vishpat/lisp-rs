@@ -2,33 +2,110 @@ use crate::env::*;
 use crate::object::*;
 use crate::parser::*;
 use std::cell::RefCell;
+use std::cmp::Ordering;
 use std::rc::Rc;
+
+fn print_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let mut new_list = Vec::new();
+
+    for obj in list[1..].iter() {
+        new_list.push(eval_obj(obj, env)?);
+    }
+    for obj in new_list.iter() {
+        print!("{} ", obj);
+    }
+    println!("");
+    Ok(Object::Void)
+}
 
 fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for infix operator"));
     }
     let operator = list[0].clone();
-    let left = eval_obj(&list[1].clone(), env)?;
-    let right = eval_obj(&list[2].clone(), env)?;
-    let left_val = match left {
-        Object::Integer(n) => n,
-        _ => return Err(format!("Left operand must be an integer {:?}", left)),
-    };
-    let right_val = match right {
-        Object::Integer(n) => n,
-        _ => return Err(format!("Right operand must be an integer {:?}", right)),
-    };
+    let left = &eval_obj(&list[1].clone(), env)?;
+    let right = &eval_obj(&list[2].clone(), env)?;
     match operator {
         Object::Symbol(s) => match s.as_str() {
-            "+" => Ok(Object::Integer(left_val + right_val)),
-            "-" => Ok(Object::Integer(left_val - right_val)),
-            "*" => Ok(Object::Integer(left_val * right_val)),
-            "/" => Ok(Object::Integer(left_val / right_val)),
-            "<" => Ok(Object::Bool(left_val < right_val)),
-            ">" => Ok(Object::Bool(left_val > right_val)),
-            "=" => Ok(Object::Bool(left_val == right_val)),
-            "!=" => Ok(Object::Bool(left_val != right_val)),
+            "+" => match (left, right) {
+                (Object::Integer(l), Object::Integer(r)) => Ok(Object::Integer(l + r)),
+                (Object::Float(l), Object::Float(r)) => Ok(Object::Float(l + r)),
+                (Object::Integer(l), Object::Float(r)) => Ok(Object::Float(*l as f64 + r)),
+                (Object::Float(l), Object::Integer(r)) => Ok(Object::Float(l + *r as f64)),
+                (Object::String(l), Object::String(r)) => Ok(Object::String(l.to_owned() + &*r)),
+                _ => Err(format!("Invalid types for + operator {} {}", left, right)),
+            },
+            "-" => match (left, right) {
+                (Object::Integer(l), Object::Integer(r)) => Ok(Object::Integer(l - r)),
+                (Object::Float(l), Object::Float(r)) => Ok(Object::Float(l - r)),
+                (Object::Integer(l), Object::Float(r)) => Ok(Object::Float(*l as f64 - r)),
+                (Object::Float(l), Object::Integer(r)) => Ok(Object::Float(l - *r as f64)),
+                _ => Err(format!("Invalid types for - operator {} {}", left, right)),
+            },
+            "*" => match (left, right) {
+                (Object::Integer(l), Object::Integer(r)) => Ok(Object::Integer(l * r)),
+                (Object::Float(l), Object::Float(r)) => Ok(Object::Float(l * r)),
+                (Object::Integer(l), Object::Float(r)) => Ok(Object::Float(*l as f64 * r)),
+                (Object::Float(l), Object::Integer(r)) => Ok(Object::Float(l * (*r) as f64)),
+                _ => Err(format!("Invalid types for * operator {} {}", left, right)),
+            },
+            "/" => match (left, right) {
+                (Object::Integer(l), Object::Integer(r)) => Ok(Object::Integer(l / r)),
+                (Object::Float(l), Object::Float(r)) => Ok(Object::Float(l / r)),
+                (Object::Integer(l), Object::Float(r)) => Ok(Object::Float(*l as f64 / r)),
+                (Object::Float(l), Object::Integer(r)) => Ok(Object::Float(l / (*r) as f64)),
+                _ => Err(format!("Invalid types for / operator {} {}", left, right)),
+            },
+            "%" => match (left, right) {
+                (Object::Integer(l), Object::Integer(r)) => Ok(Object::Integer(l % r)),
+                (Object::Float(l), Object::Float(r)) => Ok(Object::Float(l % r)),
+                (Object::Integer(l), Object::Float(r)) => Ok(Object::Float(*l as f64 % r)),
+                (Object::Float(l), Object::Integer(r)) => Ok(Object::Float(l % (*r) as f64)),
+                _ => Err(format!("Invalid types for % operator {} {}", left, right)),
+            },
+            "<" => match (left, right) {
+                (Object::Integer(l), Object::Integer(r)) => Ok(Object::Bool(l < r)),
+                (Object::Float(l), Object::Float(r)) => Ok(Object::Bool(l < r)),
+                (Object::Integer(l), Object::Float(r)) => Ok(Object::Bool((*l as f64) < *r)),
+                (Object::Float(l), Object::Integer(r)) => Ok(Object::Bool(l < &(*r as f64))),
+                (Object::String(l), Object::String(r)) => {
+                    Ok(Object::Bool(l.cmp(&r) == Ordering::Less))
+                }
+                _ => Err(format!("Invalid types for < operator {} {}", left, right)),
+            },
+            ">" => match (left, right) {
+                (Object::Integer(l), Object::Integer(r)) => Ok(Object::Bool(l > r)),
+                (Object::Float(l), Object::Float(r)) => Ok(Object::Bool(l > r)),
+                (Object::Integer(l), Object::Float(r)) => Ok(Object::Bool(*l as f64 > *r)),
+                (Object::Float(l), Object::Integer(r)) => Ok(Object::Bool(l > &(*r as f64))),
+                (Object::String(l), Object::String(r)) => {
+                    Ok(Object::Bool(l.cmp(&r) == Ordering::Greater))
+                }
+                _ => Err(format!("Invalid types for > operator {} {}", left, right)),
+            },
+            "==" => match (left, right) {
+                (Object::Integer(l), Object::Integer(r)) => Ok(Object::Bool(l == r)),
+                (Object::String(l), Object::String(r)) => Ok(Object::Bool(l == r)),
+                _ => Err(format!("Invalid types for == operator {} {}", left, right)),
+            },
+            "!=" => match (left, right) {
+                (Object::Integer(l), Object::Integer(r)) => Ok(Object::Bool(l != r)),
+                (Object::Float(l), Object::Float(r)) => Ok(Object::Bool(l != r)),
+                (Object::Integer(l), Object::Float(r)) => Ok(Object::Bool(*l as f64 != *r)),
+                (Object::Float(l), Object::Integer(r)) => Ok(Object::Bool(*l != (*r) as f64)),
+                (Object::String(l), Object::String(r)) => {
+                    Ok(Object::Bool(l.cmp(&r) != Ordering::Equal))
+                }
+                _ => Err(format!("Invalid types for != operator {} {}", left, right)),
+            },
+            "&" => match (left, right) {
+                (Object::Bool(l), Object::Bool(r)) => Ok(Object::Bool(*l && *r)),
+                _ => Err(format!("Invalid types for & operator {} {}", left, right)),
+            },
+            "|" => match (left, right) {
+                (Object::Bool(l), Object::Bool(r)) => Ok(Object::Bool(*l || *r)),
+                _ => Err(format!("Invalid types for | operator {} {}", left, right)),
+            },
             _ => Err(format!("Invalid infix operator: {}", s)),
         },
         _ => Err(format!("Operator must be a symbol")),
@@ -47,6 +124,15 @@ fn eval_define(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     let val = eval_obj(&list[2], env)?;
     env.borrow_mut().set(&sym, val);
     Ok(Object::Void)
+}
+
+fn eval_list_data(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let mut new_list = Vec::new();
+
+    for obj in list[1..].iter() {
+        new_list.push(eval_obj(obj, env)?);
+    }
+    Ok(Object::ListData(new_list))
 }
 
 fn eval_if(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
@@ -96,7 +182,7 @@ fn eval_function_call(
 ) -> Result<Object, String> {
     let lamdba = env.borrow_mut().get(s);
     if lamdba.is_none() {
-        return Err(format!("Unbound symbol: {}", s));
+        return Err(format!("Unbound function: {}", s));
     }
 
     let func = lamdba.unwrap();
@@ -115,23 +201,170 @@ fn eval_function_call(
 }
 
 fn eval_symbol(s: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
-    let val = env.borrow_mut().get(s);
+    let val = match s {
+        "#t" => return Ok(Object::Bool(true)),
+        "#f" => return Ok(Object::Bool(false)),
+        "#nil" => return Ok(Object::Void),
+        _ => env.borrow_mut().get(s),
+    };
+
     if val.is_none() {
         return Err(format!("Unbound symbol: {}", s));
     }
+
     Ok(val.unwrap().clone())
 }
 
+fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    if list.len() != 3 {
+        return Err(format!("Invalid number of arguments for map {:?}", list));
+    }
+
+    let lambda = eval_obj(&list[1], env)?;
+    let arg_list = eval_obj(&list[2], env)?;
+
+    let (params, body) = match lambda {
+        Object::Lambda(p, b) => {
+            if p.len() != 1 {
+                return Err(format!(
+                    "Invalid number of parameters for map function {:?}",
+                    p
+                ));
+            }
+            (p, b)
+        }
+        _ => return Err(format!("Not a lambda while evaluating map: {}", lambda)),
+    };
+
+    let args = match arg_list {
+        Object::ListData(list) => list,
+        _ => return Err(format!("Invalid map arguments: {:?}", list)),
+    };
+
+    let func_param = &params[0];
+    let mut result_list = Vec::new();
+    for arg in args.iter() {
+        let val = eval_obj(&arg, env)?;
+        let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+        new_env.borrow_mut().set(&func_param, val);
+        let new_body = body.clone();
+        let result = eval_obj(&Object::List(new_body), &mut new_env)?;
+        result_list.push(result);
+    }
+    Ok(Object::ListData(result_list))
+}
+
+fn eval_filter(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    if list.len() != 3 {
+        return Err(format!("Invalid number of arguments for filter {:?}", list));
+    }
+
+    let lambda = eval_obj(&list[1], env)?;
+    let arg_list = eval_obj(&list[2], env)?;
+
+    let (params, body) = match lambda {
+        Object::Lambda(p, b) => {
+            if p.len() != 1 {
+                return Err(format!(
+                    "Invalid number of parameters for map function {:?}",
+                    p
+                ));
+            }
+            (p, b)
+        }
+        _ => return Err(format!("Not a lambda while evaluating map: {}", lambda)),
+    };
+
+    let args = match arg_list {
+        Object::ListData(list) => list,
+        _ => return Err(format!("Invalid map arguments: {:?}", list)),
+    };
+
+    let func_param = &params[0];
+    let mut result_list = Vec::new();
+    for arg in args.iter() {
+        let val = eval_obj(&arg, env)?;
+        let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+        new_env.borrow_mut().set(&func_param, val.clone());
+        let new_body = body.clone();
+        let result_obj = eval_obj(&Object::List(new_body), &mut new_env)?;
+        let result = match result_obj {
+            Object::Bool(b) => b,
+            _ => return Err(format!("Invalid filter result: {}", result_obj)),
+        };
+        if result {
+            result_list.push(val);
+        }
+    }
+    Ok(Object::ListData(result_list))
+}
+
+fn eval_reduce(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    if list.len() != 3 {
+        return Err(format!("Invalid number of arguments for reduce {:?}", list));
+    }
+
+    let lambda = eval_obj(&list[1], env)?;
+    let arg_list = eval_obj(&list[2], env)?;
+
+    let (params, body) = match lambda {
+        Object::Lambda(p, b) => {
+            if p.len() != 2 {
+                return Err(format!(
+                    "Invalid number of parameters for reduce function {:?}",
+                    p
+                ));
+            }
+            (p, b)
+        }
+        _ => return Err(format!("Not a lambda while evaluating map: {}", lambda)),
+    };
+
+    let args = match arg_list {
+        Object::ListData(list) => list,
+        _ => return Err(format!("Invalid map arguments: {:?}", list)),
+    };
+
+    if args.len() < 2 {
+        return Err(format!(
+            "Invalid number of arguments for reduce: {:?}",
+            args
+        ));
+    }
+
+    let reduce_param1 = &params[0];
+    let reduce_param2 = &params[1];
+    let mut accumulator = eval_obj(&args[0], env)?;
+
+    for arg in args[1..].iter() {
+        let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+        new_env
+            .borrow_mut()
+            .set(&reduce_param1, accumulator.clone());
+
+        let val = eval_obj(&arg, env)?;
+        new_env.borrow_mut().set(&reduce_param2, val.clone());
+
+        let new_body = body.clone();
+        accumulator = eval_obj(&Object::List(new_body), &mut new_env)?;
+    }
+    Ok(accumulator)
+}
 fn eval_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let head = &list[0];
     match head {
         Object::Symbol(s) => match s.as_str() {
-            "+" | "-" | "*" | "/" | "<" | ">" | "=" | "!=" => {
+            "+" | "-" | "*" | "/" | "%" | "<" | ">" | "==" | "!=" | "&" | "|" => {
                 return eval_binary_op(&list, env);
             }
             "define" => eval_define(&list, env),
             "if" => eval_if(&list, env),
+            "list" => eval_list_data(&list, env),
+            "print" => print_list(&list, env),
             "lambda" => eval_function_definition(&list),
+            "map" => eval_map(&list, env),
+            "filter" => eval_filter(&list, env),
+            "reduce" => eval_reduce(&list, env),
             _ => eval_function_call(&s, &list, env),
         },
         _ => {
@@ -155,7 +388,10 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
         Object::Lambda(_params, _body) => Ok(Object::Void),
         Object::Bool(_) => Ok(obj.clone()),
         Object::Integer(n) => Ok(Object::Integer(*n)),
+        Object::Float(n) => Ok(Object::Float(*n)),
+        Object::String(s) => Ok(Object::String(s.to_string())),
         Object::Symbol(s) => eval_symbol(s, env),
+        Object::ListData(l) => Ok(Object::ListData(l.to_vec())),
     }
 }
 
@@ -176,6 +412,69 @@ mod tests {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let result = eval("(+ 1 2)", &mut env).unwrap();
         assert_eq!(result, Object::Integer(3));
+    }
+
+    #[test]
+    fn test_simple_sub() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(- 1.0 2)", &mut env).unwrap();
+        assert_eq!(result, Object::Float(-1.0));
+    }
+
+    #[test]
+    fn test_str_add() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(+ \"Raleigh\" \"Durham\")", &mut env).unwrap();
+        assert_eq!(result, Object::String("RaleighDurham".to_string()));
+    }
+
+    #[test]
+    fn test_str_eq_false() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(== \"Raleigh\" \"Durham\")", &mut env).unwrap();
+        assert_eq!(result, Object::Bool(false));
+    }
+
+    #[test]
+    fn test_str_eq_true() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(== \"Raleigh\" \"Raleigh\")", &mut env).unwrap();
+        assert_eq!(result, Object::Bool(true));
+    }
+
+    #[test]
+    fn test_greater_than_str() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(> \"Raleigh\" \"Durham\")", &mut env).unwrap();
+        assert_eq!(result, Object::Bool(true));
+    }
+
+    #[test]
+    fn test_less_than_str() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(< \"abcd\" \"abef\")", &mut env).unwrap();
+        assert_eq!(result, Object::Bool(true));
+    }
+
+    #[test]
+    fn test_greater_than_int() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(> 10 20)", &mut env).unwrap();
+        assert_eq!(result, Object::Bool(false));
+    }
+
+    #[test]
+    fn test_less_than_int() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(< 21.0 20.0)", &mut env).unwrap();
+        assert_eq!(result, Object::Bool(false));
+    }
+
+    #[test]
+    fn test_modulo() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let result = eval("(% 21.0 20.0)", &mut env).unwrap();
+        assert_eq!(result, Object::Float(1.0));
     }
 
     #[test]
@@ -205,6 +504,67 @@ mod tests {
             result,
             Object::List(vec![Object::Integer((10 * 10) as i64)])
         );
+    }
+
+    #[test]
+    fn test_map() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+            (
+                (define sqr (lambda (r) (* r r)))
+                (define l (list 1 2 3 4 5))
+                (map sqr l)
+            )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(vec![Object::ListData(vec![
+                Object::Integer(1),
+                Object::Integer(4),
+                Object::Integer(9),
+                Object::Integer(16),
+                Object::Integer(25)
+            ])])
+        );
+    }
+
+    #[test]
+    fn test_filter() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+            (
+                (define odd (lambda (v) (== 1 (% v 2))))
+                (define l (list 1 2 3 4 5))
+                (filter odd l)
+            )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(vec![Object::ListData(vec![
+                Object::Integer(1),
+                Object::Integer(3),
+                Object::Integer(5)
+            ])])
+        );
+    }
+
+    #[test]
+    fn test_reduce() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+            (
+                (define odd (lambda (v) (== 1 (% v 2))))
+                (define l (list 1 2 3 4 5))
+                (reduce (lambda (x y) (| x y)) (map odd l))
+            )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(result, Object::List(vec![Object::Bool(true),]));
     }
 
     #[test]
