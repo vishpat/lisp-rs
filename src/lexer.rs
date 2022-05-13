@@ -26,14 +26,14 @@ impl fmt::Display for Token {
 
 #[derive(Debug)]
 pub struct TokenError {
-    ch: char,
+    err: String,
 }
 
 impl Error for TokenError {}
 
 impl fmt::Display for TokenError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "unexpected character: {}", self.ch)
+        write!(f, "Tokenization error: {}", self.err)
     }
 }
 
@@ -56,8 +56,12 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
                     word.push(chars.remove(0));
                 }
 
-                if chars.len() > 0 {
+                if chars.len() > 0 && chars[0] == '"' {
                     chars.remove(0);
+                } else {
+                    return Err(TokenError {
+                        err: format!("Unterminated string: {}", word),
+                    });
                 }
 
                 tokens.push(Token::String(word));
@@ -95,40 +99,6 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
         }
     }
 
-    Ok(tokens)
-}
-
-pub fn tokenize2(program: &str) -> Result<Vec<Token>, TokenError> {
-    let program2 = program.replace("(", " ( ").replace(")", " ) ");
-    let words = program2.split_whitespace();
-    let mut tokens: Vec<Token> = Vec::new();
-    for word in words {
-        match word {
-            "(" => tokens.push(Token::LParen),
-            ")" => tokens.push(Token::RParen),
-            _ => {
-                let i = word.parse::<i64>();
-                if i.is_ok() {
-                    tokens.push(Token::Integer(i.unwrap()));
-                    continue;
-                }
-
-                let f = word.parse::<f64>();
-                if f.is_ok() {
-                    tokens.push(Token::Float(f.unwrap()));
-                    continue;
-                }
-
-                if word.chars().nth(0).unwrap() == '"' && word.chars().last().unwrap() == '"' {
-                    let s = String::from(&word[1..word.len() - 1]);
-                    tokens.push(Token::String(s));
-                    continue;
-                }
-
-                tokens.push(Token::Symbol(word.to_string()));
-            }
-        }
-    }
     Ok(tokens)
 }
 
