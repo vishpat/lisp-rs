@@ -227,7 +227,7 @@ fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
         Object::Lambda(p, b) => {
             if p.len() != 1 {
                 return Err(format!(
-                    "Invalid number of parameters for map function {:?}",
+                    "Invalid number of parameters for map lambda function {:?}",
                     p
                 ));
             }
