@@ -504,6 +504,21 @@ mod tests {
     }
 
     #[test]
+    fn test_area_of_a_circle_float() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "(
+                        (define r 5.0)
+                        (define pi 3.14)
+                        (* pi (* r r))
+                      )";
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(vec![Object::Float((3.14 * 5.0 * 5.0) as f64)])
+        );
+    }
+
+    #[test]
     fn test_area_of_a_circle() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "(
