@@ -4,4 +4,4 @@ A simple Lisp interpreter in Rust. The interpreter was developed to explain how 
 
 For detailed code walk-through refer to the [docs](https://vishpat.github.io/lisp-rs).
 
-[![asciicast](https://asciinema.org/a/Rnf7OPcIjlA1K6V828PEVHnPS.svg)](https://asciinema.org/a/Rnf7OPcIjlA1K6V828PEVHnPS)
+[![asciicast](https://asciinema.org/a/VVQQfGpp15a4BaoNgnEKIqqrr.svg)](https://asciinema.org/a/VVQQfGpp15a4BaoNgnEKIqqrr)
