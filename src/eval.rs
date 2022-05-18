@@ -351,32 +351,34 @@ fn eval_reduce(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     Ok(accumulator)
 }
 fn eval_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
-    let head = &list[0];
-    match head {
-        Object::Symbol(s) => match s.as_str() {
-            "+" | "-" | "*" | "/" | "%" | "<" | ">" | "==" | "!=" | "&" | "|" => {
-                return eval_binary_op(&list, env);
-            }
-            "define" => eval_define(&list, env),
-            "if" => eval_if(&list, env),
-            "list" => eval_list_data(&list, env),
-            "print" => print_list(&list, env),
-            "lambda" => eval_function_definition(&list),
-            "map" => eval_map(&list, env),
-            "filter" => eval_filter(&list, env),
-            "reduce" => eval_reduce(&list, env),
-            _ => eval_function_call(&s, &list, env),
-        },
-        _ => {
-            let mut new_list = Vec::new();
-            for obj in list {
-                let result = eval_obj(obj, env)?;
-                match result {
-                    Object::Void => {}
-                    _ => new_list.push(result),
+    let mut head = &mut list[0].clone();
+    loop {
+        match head {
+            Object::Symbol(s) => match s.as_str() {
+                "+" | "-" | "*" | "/" | "%" | "<" | ">" | "==" | "!=" | "&" | "|" => {
+                    return eval_binary_op(&list, env);
                 }
+                "define" => return eval_define(&list, env),
+                "if" => return eval_if(&list, env),
+                "list" => return eval_list_data(&list, env),
+                "print" => return print_list(&list, env),
+                "lambda" => return eval_function_definition(&list),
+                "map" => return eval_map(&list, env),
+                "filter" => return eval_filter(&list, env),
+                "reduce" => return eval_reduce(&list, env),
+                _ => return eval_function_call(&s, &list, env),
+            },
+            _ => {
+                let mut new_list = Vec::new();
+                for obj in list {
+                    let result = eval_obj(obj, env)?;
+                    match result {
+                        Object::Void => {}
+                        _ => new_list.push(result),
+                    }
+                }
+                return Ok(Object::List(new_list));
             }
-            Ok(Object::List(new_list))
         }
     }
 }
