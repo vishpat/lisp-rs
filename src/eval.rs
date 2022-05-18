@@ -351,21 +351,39 @@ fn eval_reduce(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     Ok(accumulator)
 }
 fn eval_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
-    let mut head = &mut list[0].clone();
+    let list2 = &mut list.clone();
     loop {
+        let mut head = &mut list2[0];
         match head {
             Object::Symbol(s) => match s.as_str() {
                 "+" | "-" | "*" | "/" | "%" | "<" | ">" | "==" | "!=" | "&" | "|" => {
                     return eval_binary_op(&list, env);
                 }
                 "define" => return eval_define(&list, env),
-                "if" => return eval_if(&list, env),
                 "list" => return eval_list_data(&list, env),
                 "print" => return print_list(&list, env),
                 "lambda" => return eval_function_definition(&list),
                 "map" => return eval_map(&list, env),
                 "filter" => return eval_filter(&list, env),
                 "reduce" => return eval_reduce(&list, env),
+                "if" => {
+                    if list.len() != 4 {
+                        return Err(format!("Invalid number of arguments for if statement"));
+                    }
+
+                    let cond_obj = eval_obj(&list[1], env)?;
+                    let cond = match cond_obj {
+                        Object::Bool(b) => b,
+                        _ => return Err(format!("Condition must be a boolean")),
+                    };
+
+                    if cond == true {
+                        *list2 = list2[2..].to_vec();
+                    } else {
+                        *list2 = list2[3..].to_vec();
+                    }
+                    continue;
+                },
                 _ => return eval_function_call(&s, &list, env),
             },
             _ => {
