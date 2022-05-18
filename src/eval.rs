@@ -26,7 +26,7 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
     let left = &eval_obj(&list[1].clone(), env)?;
     let right = &eval_obj(&list[2].clone(), env)?;
     match operator {
-        Object::Symbol(s) => match s.as_str() {
+        Object::BinaryOp(s) => match s.as_str() {
             "+" => match (left, right) {
                 (Object::Integer(l), Object::Integer(r)) => Ok(Object::Integer(l + r)),
                 (Object::Float(l), Object::Float(r)) => Ok(Object::Float(l + r)),
@@ -200,8 +200,6 @@ fn eval_function_call(
     }
 }
 
-fn eval_symbol(s: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {}
-
 fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for map {:?}", list));
@@ -359,18 +357,18 @@ fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object
 }
 
 fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
-    let current_obj = &mut obj.clone();
-    let current_env = &mut env;
+    let mut current_obj = &obj.clone();
+    let mut current_env = env.clone();
     loop {
         match current_obj {
             Object::List(list) => {
-                let mut head = &mut list[0];
+                let head = &list[0];
                 match head {
-                    Object::Binary_OP(op) => {
-                        return eval_binary_op(list, env);
+                    Object::BinaryOp(_op) => {
+                        return eval_binary_op(list, &mut current_env);
                     }
-                    Object::Keyword(keyword) => {
-                        return eval_keyword(keyword, list, env);
+                    Object::Keyword(_keyword) => {
+                        return eval_keyword(list, &mut current_env);
                     }
                     Object::Symbol(s) => {
                         let lamdba = env.borrow_mut().get(s);
@@ -381,14 +379,15 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                         let func = lamdba.unwrap();
                         match func {
                             Object::Lambda(params, body) => {
-                                let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+                                let new_env =
+                                    Rc::new(RefCell::new(Env::extend(current_env.clone())));
                                 for (i, param) in params.iter().enumerate() {
                                     let val = eval_obj(&list[i + 1], env)?;
                                     new_env.borrow_mut().set(param, val);
                                 }
                                 let new_body = body.clone();
-                                current_obj = &mut Object::List(new_body);
-                                current_env = &mut new_env;
+                                current_obj = &Object::List(new_body);
+                                current_env = new_env.clone();
                                 continue;
                             }
                             _ => return Err(format!("Not a lambda: {}", s)),
@@ -408,7 +407,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                 }
             }
             Object::Symbol(s) => {
-                let val = match s {
+                let val = match s.as_str() {
                     "#t" => return Ok(Object::Bool(true)),
                     "#f" => return Ok(Object::Bool(false)),
                     "#nil" => return Ok(Object::Void),
@@ -428,6 +427,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
             Object::Float(n) => return Ok(Object::Float(*n)),
             Object::String(s) => return Ok(Object::String(s.to_string())),
             Object::ListData(l) => return Ok(Object::ListData(l.to_vec())),
+            _ => return Err(format!("Invalid object: {:?}", obj)),
         }
     }
 }

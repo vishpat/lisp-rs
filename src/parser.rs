@@ -48,6 +48,7 @@ fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
         let t = token.unwrap();
         match t {
             Token::Keyword(k) => list.push(Object::Keyword(k)),
+            Token::BinaryOp(b) => list.push(Object::BinaryOp(b)),
             Token::Integer(n) => list.push(Object::Integer(n)),
             Token::Float(f) => list.push(Object::Float(f)),
             Token::String(s) => list.push(Object::String(s)),
@@ -76,7 +77,7 @@ mod tests {
         assert_eq!(
             list,
             Object::List(vec![
-                Object::Symbol("+".to_string()),
+                Object::BinaryOp("+".to_string()),
                 Object::Integer(1),
                 Object::Integer(2),
             ])
@@ -105,10 +106,10 @@ mod tests {
                     Object::Integer(314),
                 ]),
                 Object::List(vec![
-                    Object::Symbol("*".to_string()),
+                    Object::BinaryOp("*".to_string()),
                     Object::Symbol("pi".to_string()),
                     Object::List(vec![
-                        Object::Symbol("*".to_string()),
+                        Object::Binary_OP("*".to_string()),
                         Object::Symbol("r".to_string()),
                         Object::Symbol("r".to_string()),
                     ]),

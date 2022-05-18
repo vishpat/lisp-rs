@@ -4,6 +4,7 @@ use std::fmt;
 pub enum Object {
     Void,
     Keyword(String),
+    BinaryOp(String),
     Integer(i64),
     Float(f64),
     Bool(bool),
@@ -19,6 +20,7 @@ impl fmt::Display for Object {
         match self {
             Object::Void => write!(f, "Void"),
             Object::Keyword(s) => write!(f, "{}", s),
+            Object::BinaryOp(s) => write!(f, "{}", s),
             Object::Integer(n) => write!(f, "{}", n),
             Object::Float(n) => write!(f, "{}", n),
             Object::Bool(b) => write!(f, "{}", b),

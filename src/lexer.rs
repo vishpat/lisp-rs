@@ -6,7 +6,7 @@ pub enum Token {
     Integer(i64),
     Float(f64),
     String(String),
-    Binary_OP(String),
+    BinaryOp(String),
     Keyword(String),
     Symbol(String),
     LParen,
@@ -18,7 +18,7 @@ impl fmt::Display for Token {
         match self {
             Token::Integer(n) => write!(f, "{}", n),
             Token::Float(n) => write!(f, "{}", n),
-            Token::Binary_OP(s) => write!(f, "{}", s),
+            Token::BinaryOp(s) => write!(f, "{}", s),
             Token::String(s) => write!(f, "{}", s),
             Token::Symbol(s) => write!(f, "{}", s),
             Token::LParen => write!(f, "("),
@@ -103,7 +103,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
                         Token::Keyword(word)
                     }
                     "+" | "-" | "*" | "/" | "%" | "<" | ">" | "==" | "!=" | "&" | "|" => {
-                        Token::Binary_OP(word)
+                        Token::BinaryOp(word)
                     }
                     _ => Token::Symbol(word),
                 };
