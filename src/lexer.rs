@@ -6,6 +6,8 @@ pub enum Token {
     Integer(i64),
     Float(f64),
     String(String),
+    Binary_OP(String),
+    Keyword(String),
     Symbol(String),
     LParen,
     RParen,
@@ -16,10 +18,12 @@ impl fmt::Display for Token {
         match self {
             Token::Integer(n) => write!(f, "{}", n),
             Token::Float(n) => write!(f, "{}", n),
+            Token::Binary_OP(s) => write!(f, "{}", s),
             Token::String(s) => write!(f, "{}", s),
             Token::Symbol(s) => write!(f, "{}", s),
             Token::LParen => write!(f, "("),
             Token::RParen => write!(f, ")"),
+            Token::Keyword(s) => write!(f, "{}", s),
         }
     }
 }
@@ -94,7 +98,17 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
                     continue;
                 }
 
-                tokens.push(Token::Symbol(word.to_string()));
+                let token = match word.as_str() {
+                    "define" | "if" | "list" | "print" | "lambda" | "map" | "filter" | "reduce" => {
+                        Token::Keyword(word)
+                    }
+                    "+" | "-" | "*" | "/" | "%" | "<" | ">" | "==" | "!=" | "&" | "|" => {
+                        Token::Binary_OP(word)
+                    }
+                    _ => Token::Symbol(word),
+                };
+
+                tokens.push(token);
             }
         }
     }
@@ -136,12 +150,12 @@ mod tests {
             vec![
                 Token::LParen,
                 Token::LParen,
-                Token::Symbol("define".to_string()),
+                Token::Keyword("define".to_string()),
                 Token::Symbol("r".to_string()),
                 Token::Integer(10),
                 Token::RParen,
                 Token::LParen,
-                Token::Symbol("define".to_string()),
+                Token::Keyword("define".to_string()),
                 Token::Symbol("pi".to_string()),
                 Token::Integer(314),
                 Token::RParen,

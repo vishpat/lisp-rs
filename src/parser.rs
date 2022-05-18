@@ -47,6 +47,7 @@ fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
         }
         let t = token.unwrap();
         match t {
+            Token::Keyword(k) => list.push(Object::Keyword(k)),
             Token::Integer(n) => list.push(Object::Integer(n)),
             Token::Float(f) => list.push(Object::Float(f)),
             Token::String(s) => list.push(Object::String(s)),
@@ -94,12 +95,12 @@ mod tests {
             list,
             Object::List(vec![
                 Object::List(vec![
-                    Object::Symbol("define".to_string()),
+                    Object::Keyword("define".to_string()),
                     Object::Symbol("r".to_string()),
                     Object::Integer(10),
                 ]),
                 Object::List(vec![
-                    Object::Symbol("define".to_string()),
+                    Object::Keyword("define".to_string()),
                     Object::Symbol("pi".to_string()),
                     Object::Integer(314),
                 ]),

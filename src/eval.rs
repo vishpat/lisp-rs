@@ -200,20 +200,7 @@ fn eval_function_call(
     }
 }
 
-fn eval_symbol(s: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
-    let val = match s {
-        "#t" => return Ok(Object::Bool(true)),
-        "#f" => return Ok(Object::Bool(false)),
-        "#nil" => return Ok(Object::Void),
-        _ => env.borrow_mut().get(s),
-    };
-
-    if val.is_none() {
-        return Err(format!("Unbound symbol: {}", s));
-    }
-
-    Ok(val.unwrap().clone())
-}
+fn eval_symbol(s: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {}
 
 fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
@@ -350,68 +337,98 @@ fn eval_reduce(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     }
     Ok(accumulator)
 }
-fn eval_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
-    let list2 = &mut list.clone();
-    loop {
-        let mut head = &mut list2[0];
-        match head {
-            Object::Symbol(s) => match s.as_str() {
-                "+" | "-" | "*" | "/" | "%" | "<" | ">" | "==" | "!=" | "&" | "|" => {
-                    return eval_binary_op(&list, env);
-                }
-                "define" => return eval_define(&list, env),
-                "list" => return eval_list_data(&list, env),
-                "print" => return print_list(&list, env),
-                "lambda" => return eval_function_definition(&list),
-                "map" => return eval_map(&list, env),
-                "filter" => return eval_filter(&list, env),
-                "reduce" => return eval_reduce(&list, env),
-                "if" => {
-                    if list.len() != 4 {
-                        return Err(format!("Invalid number of arguments for if statement"));
-                    }
 
-                    let cond_obj = eval_obj(&list[1], env)?;
-                    let cond = match cond_obj {
-                        Object::Bool(b) => b,
-                        _ => return Err(format!("Condition must be a boolean")),
-                    };
-
-                    if cond == true {
-                        *list2 = list2[2..].to_vec();
-                    } else {
-                        *list2 = list2[3..].to_vec();
-                    }
-                    continue;
-                },
-                _ => return eval_function_call(&s, &list, env),
-            },
-            _ => {
-                let mut new_list = Vec::new();
-                for obj in list {
-                    let result = eval_obj(obj, env)?;
-                    match result {
-                        Object::Void => {}
-                        _ => new_list.push(result),
-                    }
-                }
-                return Ok(Object::List(new_list));
-            }
+fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let head = &list[0];
+    match head {
+        Object::Keyword(s) => match s.as_str() {
+            "define" => return eval_define(&list, env),
+            "list" => return eval_list_data(&list, env),
+            "print" => return print_list(&list, env),
+            "lambda" => return eval_function_definition(&list),
+            "map" => return eval_map(&list, env),
+            "filter" => return eval_filter(&list, env),
+            "reduce" => return eval_reduce(&list, env),
+            "if" => return eval_if(&list, env),
+            _ => return Err(format!("Unknown keyword: {}", s)),
+        },
+        _ => {
+            return Err(format!("Invalid keyword: {}", head));
         }
     }
 }
 
 fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
-    match obj {
-        Object::List(list) => eval_list(list, env),
-        Object::Void => Ok(Object::Void),
-        Object::Lambda(_params, _body) => Ok(Object::Void),
-        Object::Bool(_) => Ok(obj.clone()),
-        Object::Integer(n) => Ok(Object::Integer(*n)),
-        Object::Float(n) => Ok(Object::Float(*n)),
-        Object::String(s) => Ok(Object::String(s.to_string())),
-        Object::Symbol(s) => eval_symbol(s, env),
-        Object::ListData(l) => Ok(Object::ListData(l.to_vec())),
+    let current_obj = &mut obj.clone();
+    let current_env = &mut env;
+    loop {
+        match current_obj {
+            Object::List(list) => {
+                let mut head = &mut list[0];
+                match head {
+                    Object::Binary_OP(op) => {
+                        return eval_binary_op(list, env);
+                    }
+                    Object::Keyword(keyword) => {
+                        return eval_keyword(keyword, list, env);
+                    }
+                    Object::Symbol(s) => {
+                        let lamdba = env.borrow_mut().get(s);
+                        if lamdba.is_none() {
+                            return Err(format!("Unbound function: {}", s));
+                        }
+
+                        let func = lamdba.unwrap();
+                        match func {
+                            Object::Lambda(params, body) => {
+                                let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+                                for (i, param) in params.iter().enumerate() {
+                                    let val = eval_obj(&list[i + 1], env)?;
+                                    new_env.borrow_mut().set(param, val);
+                                }
+                                let new_body = body.clone();
+                                current_obj = &mut Object::List(new_body);
+                                current_env = &mut new_env;
+                                continue;
+                            }
+                            _ => return Err(format!("Not a lambda: {}", s)),
+                        }
+                    }
+                    _ => {
+                        let mut new_list = Vec::new();
+                        for obj in list {
+                            let result = eval_obj(obj, env)?;
+                            match result {
+                                Object::Void => {}
+                                _ => new_list.push(result),
+                            }
+                        }
+                        return Ok(Object::List(new_list));
+                    }
+                }
+            }
+            Object::Symbol(s) => {
+                let val = match s {
+                    "#t" => return Ok(Object::Bool(true)),
+                    "#f" => return Ok(Object::Bool(false)),
+                    "#nil" => return Ok(Object::Void),
+                    _ => env.borrow_mut().get(s),
+                };
+
+                if val.is_none() {
+                    return Err(format!("Unbound symbol: {}", s));
+                }
+
+                return Ok(val.unwrap().clone());
+            }
+            Object::Void => return Ok(Object::Void),
+            Object::Lambda(_params, _body) => return Ok(Object::Void),
+            Object::Bool(_) => return Ok(obj.clone()),
+            Object::Integer(n) => return Ok(Object::Integer(*n)),
+            Object::Float(n) => return Ok(Object::Float(*n)),
+            Object::String(s) => return Ok(Object::String(s.to_string())),
+            Object::ListData(l) => return Ok(Object::ListData(l.to_vec())),
+        }
     }
 }
 
