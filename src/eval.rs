@@ -672,12 +672,12 @@ mod tests {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
             (
-                (define sum-to (lambda (n a) (if (= n 0) a (sum-to (- n 1) (+ n a)))))
-                (sum-to 500 1)
+                (define sum-n (lambda (n a) (if (= n 0) a (sum-n (- n 1) (+ n a)))))
+                (sum-n 500 0)
             )
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::List(vec![Object::Integer((125251) as i64)]));
+        assert_eq!(result, Object::List(vec![Object::Integer((125250) as i64)]));
     }
 }
