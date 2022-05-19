@@ -665,4 +665,19 @@ mod tests {
             Object::List(vec![Object::Integer((314 * 10 * 10) as i64)])
         );
     }
+
+    #[test]
+    fn test_tail_recursion()
+    {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+            (
+                (define sum-to (lambda (n a) (if (= n 0) a (sum-to (- n 1) (+ n a)))))
+                (sum-to 500 1)
+            )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(result, Object::List(vec![Object::Integer((125251) as i64)]));
+    }
 }
