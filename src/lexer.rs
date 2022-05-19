@@ -9,6 +9,7 @@ pub enum Token {
     BinaryOp(String),
     Keyword(String),
     Symbol(String),
+    If,
     LParen,
     RParen,
 }
@@ -23,6 +24,7 @@ impl fmt::Display for Token {
             Token::Symbol(s) => write!(f, "{}", s),
             Token::LParen => write!(f, "("),
             Token::RParen => write!(f, ")"),
+            Token::If => write!(f, "if"),
             Token::Keyword(s) => write!(f, "{}", s),
         }
     }
@@ -99,9 +101,10 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
                 }
 
                 let token = match word.as_str() {
-                    "define" | "if" | "list" | "print" | "lambda" | "map" | "filter" | "reduce" => {
+                    "define" | "list" | "print" | "lambda" | "map" | "filter" | "reduce" => {
                         Token::Keyword(word)
                     }
+                    "if" => Token::If,
                     "+" | "-" | "*" | "/" | "%" | "<" | ">" | "==" | "!=" | "&" | "|" => {
                         Token::BinaryOp(word)
                     }

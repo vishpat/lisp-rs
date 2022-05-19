@@ -135,24 +135,6 @@ fn eval_list_data(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
     Ok(Object::ListData(new_list))
 }
 
-fn eval_if(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
-    if list.len() != 4 {
-        return Err(format!("Invalid number of arguments for if statement"));
-    }
-
-    let cond_obj = eval_obj(&list[1], env)?;
-    let cond = match cond_obj {
-        Object::Bool(b) => b,
-        _ => return Err(format!("Condition must be a boolean")),
-    };
-
-    if cond == true {
-        return eval_obj(&list[2], env);
-    } else {
-        return eval_obj(&list[3], env);
-    }
-}
-
 fn eval_function_definition(list: &Vec<Object>) -> Result<Object, String> {
     let params = match &list[1] {
         Object::List(list) => {
@@ -322,7 +304,6 @@ fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object
             "map" => return eval_map(&list, env),
             "filter" => return eval_filter(&list, env),
             "reduce" => return eval_reduce(&list, env),
-            "if" => return eval_if(&list, env),
             _ => return Err(format!("Unknown keyword: {}", s)),
         },
         _ => {
@@ -344,6 +325,24 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                     }
                     Object::Keyword(_keyword) => {
                         return eval_keyword(&list, &mut current_env);
+                    }
+                    Object::If => {
+                        if list.len() != 4 {
+                            return Err(format!("Invalid number of arguments for if statement"));
+                        }
+
+                        let cond_obj = eval_obj(&list[1], env)?;
+                        let cond = match cond_obj {
+                            Object::Bool(b) => b,
+                            _ => return Err(format!("Condition must be a boolean")),
+                        };
+
+                        if cond == true {
+                            current_obj = Box::new(list[2].clone());
+                        } else {
+                            current_obj = Box::new(list[3].clone());
+                        }
+                        continue;
                     }
                     Object::Symbol(s) => {
                         let lamdba = env.borrow_mut().get(s);

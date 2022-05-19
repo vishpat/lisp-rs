@@ -48,6 +48,7 @@ fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
         let t = token.unwrap();
         match t {
             Token::Keyword(k) => list.push(Object::Keyword(k)),
+            Token::If => list.push(Object::If),
             Token::BinaryOp(b) => list.push(Object::BinaryOp(b)),
             Token::Integer(n) => list.push(Object::Integer(n)),
             Token::Float(f) => list.push(Object::Float(f)),
