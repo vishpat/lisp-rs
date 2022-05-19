@@ -331,7 +331,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                             return Err(format!("Invalid number of arguments for if statement"));
                         }
 
-                        let cond_obj = eval_obj(&list[1], env)?;
+                        let cond_obj = eval_obj(&list[1], &mut current_env)?;
                         let cond = match cond_obj {
                             Object::Bool(b) => b,
                             _ => return Err(format!("Condition must be a boolean")),
@@ -345,7 +345,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                         continue;
                     }
                     Object::Symbol(s) => {
-                        let lamdba = env.borrow_mut().get(s);
+                        let lamdba = current_env.borrow_mut().get(s);
                         if lamdba.is_none() {
                             return Err(format!("Unbound function: {}", s));
                         }
@@ -356,7 +356,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                                 let new_env =
                                     Rc::new(RefCell::new(Env::extend(current_env.clone())));
                                 for (i, param) in params.iter().enumerate() {
-                                    let val = eval_obj(&list[i + 1], env)?;
+                                    let val = eval_obj(&list[i + 1], &mut current_env)?;
                                     new_env.borrow_mut().set(param, val);
                                 }
                                 let new_body = body.clone();
@@ -370,7 +370,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                     _ => {
                         let mut new_list = Vec::new();
                         for obj in list {
-                            let result = eval_obj(&obj, env)?;
+                            let result = eval_obj(&obj, &mut current_env)?;
                             match result {
                                 Object::Void => {}
                                 _ => new_list.push(result),
@@ -385,7 +385,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                     "#t" => return Ok(Object::Bool(true)),
                     "#f" => return Ok(Object::Bool(false)),
                     "#nil" => return Ok(Object::Void),
-                    _ => env.borrow_mut().get(&s),
+                    _ => current_env.borrow_mut().get(&s),
                 };
 
                 if val.is_none() {
