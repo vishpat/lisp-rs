@@ -359,8 +359,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                                     let val = eval_obj(&list[i + 1], &mut current_env)?;
                                     new_env.borrow_mut().set(param, val);
                                 }
-                                let new_body = body.clone();
-                                current_obj = Box::new(Object::List(new_body));
+                                current_obj = Box::new(Object::List(body));
                                 current_env = new_env.clone();
                                 continue;
                             }
