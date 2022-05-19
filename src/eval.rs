@@ -175,31 +175,6 @@ fn eval_function_definition(list: &Vec<Object>) -> Result<Object, String> {
     Ok(Object::Lambda(params, body))
 }
 
-fn eval_function_call(
-    s: &str,
-    list: &Vec<Object>,
-    env: &mut Rc<RefCell<Env>>,
-) -> Result<Object, String> {
-    let lamdba = env.borrow_mut().get(s);
-    if lamdba.is_none() {
-        return Err(format!("Unbound function: {}", s));
-    }
-
-    let func = lamdba.unwrap();
-    match func {
-        Object::Lambda(params, body) => {
-            let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
-            for (i, param) in params.iter().enumerate() {
-                let val = eval_obj(&list[i + 1], env)?;
-                new_env.borrow_mut().set(param, val);
-            }
-            let new_body = body.clone();
-            return eval_obj(&Object::List(new_body), &mut new_env);
-        }
-        _ => return Err(format!("Not a lambda: {}", s)),
-    }
-}
-
 fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for map {:?}", list));
@@ -357,18 +332,18 @@ fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object
 }
 
 fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
-    let mut current_obj = &obj.clone();
+    let mut current_obj = Box::new(obj.clone());
     let mut current_env = env.clone();
     loop {
-        match current_obj {
+        match *current_obj {
             Object::List(list) => {
                 let head = &list[0];
                 match head {
                     Object::BinaryOp(_op) => {
-                        return eval_binary_op(list, &mut current_env);
+                        return eval_binary_op(&list, &mut current_env);
                     }
                     Object::Keyword(_keyword) => {
-                        return eval_keyword(list, &mut current_env);
+                        return eval_keyword(&list, &mut current_env);
                     }
                     Object::Symbol(s) => {
                         let lamdba = env.borrow_mut().get(s);
@@ -386,7 +361,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                                     new_env.borrow_mut().set(param, val);
                                 }
                                 let new_body = body.clone();
-                                current_obj = &Object::List(new_body);
+                                current_obj = Box::new(Object::List(new_body));
                                 current_env = new_env.clone();
                                 continue;
                             }
@@ -396,7 +371,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                     _ => {
                         let mut new_list = Vec::new();
                         for obj in list {
-                            let result = eval_obj(obj, env)?;
+                            let result = eval_obj(&obj, env)?;
                             match result {
                                 Object::Void => {}
                                 _ => new_list.push(result),
@@ -411,7 +386,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                     "#t" => return Ok(Object::Bool(true)),
                     "#f" => return Ok(Object::Bool(false)),
                     "#nil" => return Ok(Object::Void),
-                    _ => env.borrow_mut().get(s),
+                    _ => env.borrow_mut().get(&s),
                 };
 
                 if val.is_none() {
@@ -423,8 +398,8 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
             Object::Void => return Ok(Object::Void),
             Object::Lambda(_params, _body) => return Ok(Object::Void),
             Object::Bool(_) => return Ok(obj.clone()),
-            Object::Integer(n) => return Ok(Object::Integer(*n)),
-            Object::Float(n) => return Ok(Object::Float(*n)),
+            Object::Integer(n) => return Ok(Object::Integer(n)),
+            Object::Float(n) => return Ok(Object::Float(n)),
             Object::String(s) => return Ok(Object::String(s.to_string())),
             Object::ListData(l) => return Ok(Object::ListData(l.to_vec())),
             _ => return Err(format!("Invalid object: {:?}", obj)),
