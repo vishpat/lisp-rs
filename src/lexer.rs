@@ -105,7 +105,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
                         Token::Keyword(word)
                     }
                     "if" => Token::If,
-                    "+" | "-" | "*" | "/" | "%" | "<" | ">" | "==" | "!=" | "&" | "|" => {
+                    "+" | "-" | "*" | "/" | "%" | "<" | ">" | "=" | "!=" | "&" | "|" => {
                         Token::BinaryOp(word)
                     }
                     _ => Token::Symbol(word),

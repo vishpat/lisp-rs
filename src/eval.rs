@@ -83,10 +83,10 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
                 }
                 _ => Err(format!("Invalid types for > operator {} {}", left, right)),
             },
-            "==" => match (left, right) {
+            "=" => match (left, right) {
                 (Object::Integer(l), Object::Integer(r)) => Ok(Object::Bool(l == r)),
                 (Object::String(l), Object::String(r)) => Ok(Object::Bool(l == r)),
-                _ => Err(format!("Invalid types for == operator {} {}", left, right)),
+                _ => Err(format!("Invalid types for = operator {} {}", left, right)),
             },
             "!=" => match (left, right) {
                 (Object::Integer(l), Object::Integer(r)) => Ok(Object::Bool(l != r)),
@@ -441,14 +441,14 @@ mod tests {
     #[test]
     fn test_str_eq_false() {
         let mut env = Rc::new(RefCell::new(Env::new()));
-        let result = eval("(== \"Raleigh\" \"Durham\")", &mut env).unwrap();
+        let result = eval("(= \"Raleigh\" \"Durham\")", &mut env).unwrap();
         assert_eq!(result, Object::Bool(false));
     }
 
     #[test]
     fn test_str_eq_true() {
         let mut env = Rc::new(RefCell::new(Env::new()));
-        let result = eval("(== \"Raleigh\" \"Raleigh\")", &mut env).unwrap();
+        let result = eval("(= \"Raleigh\" \"Raleigh\")", &mut env).unwrap();
         assert_eq!(result, Object::Bool(true));
     }
 
@@ -586,7 +586,7 @@ mod tests {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
             (
-                (define odd (lambda (v) (== 1 (% v 2))))
+                (define odd (lambda (v) (= 1 (% v 2))))
                 (define l (list 1 2 3 4 5))
                 (filter odd l)
             )
@@ -608,7 +608,7 @@ mod tests {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
             (
-                (define odd (lambda (v) (== 1 (% v 2))))
+                (define odd (lambda (v) (= 1 (% v 2))))
                 (define l (list 1 2 3 4 5))
                 (reduce (lambda (x y) (| x y)) (map odd l))
             )
