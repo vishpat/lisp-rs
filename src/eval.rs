@@ -672,12 +672,54 @@ mod tests {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
             (
-                (define sum-n (lambda (n a) (if (= n 0) a (sum-n (- n 1) (+ n a)))))
+                (define sum-n 
+                   (lambda (n a) 
+                      (if (= n 0) a 
+                          (sum-n (- n 1) (+ n a)))))
                 (sum-n 500 0)
             )
         ";
 
         let result = eval(program, &mut env).unwrap();
         assert_eq!(result, Object::List(vec![Object::Integer((125250) as i64)]));
+    }
+
+    #[test]
+    fn test_tail_recursive_factorial()
+    {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+            (
+                (define fact 
+                    (lambda (n a) 
+                      (if (= n 1) a 
+                        (fact (- n 1) (* n a)))))
+                        
+                (fact 10 1)
+            )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(result, Object::List(vec![Object::Integer((3628800) as i64)]));
+    }
+
+    #[test]
+    fn test_tail_recursive_fibonnaci()
+    {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+            (
+                (define fib
+                  (lambda (n a b) 
+                     (if (= n 0) a 
+                       (if (= n 1) b 
+                          (fib (- n 1) b (+ a b))))))
+                  
+                (fib 10 0 1)
+            )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(result, Object::List(vec![Object::Integer((55) as i64)]));
     }
 }
