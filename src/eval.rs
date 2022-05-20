@@ -293,6 +293,21 @@ fn eval_reduce(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     Ok(accumulator)
 }
 
+fn eval_symbol(s: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let val = match s {
+        "#t" => return Ok(Object::Bool(true)),
+        "#f" => return Ok(Object::Bool(false)),
+        "#nil" => return Ok(Object::Void),
+        _ => env.borrow_mut().get(s),
+    };
+
+    if val.is_none() {
+        return Err(format!("Unbound symbol: {}", s));
+    }
+
+    Ok(val.unwrap().clone())
+}
+
 fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let head = &list[0];
     match head {
@@ -380,18 +395,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                 }
             }
             Object::Symbol(s) => {
-                let val = match s.as_str() {
-                    "#t" => return Ok(Object::Bool(true)),
-                    "#f" => return Ok(Object::Bool(false)),
-                    "#nil" => return Ok(Object::Void),
-                    _ => current_env.borrow_mut().get(&s),
-                };
-
-                if val.is_none() {
-                    return Err(format!("Unbound symbol: {}", s));
-                }
-
-                return Ok(val.unwrap().clone());
+                return eval_symbol(&s, &mut current_env);
             }
             Object::Void => return Ok(Object::Void),
             Object::Lambda(_params, _body) => return Ok(Object::Void),
