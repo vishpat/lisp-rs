@@ -107,8 +107,7 @@ fn eval_function_call(
                 let val = eval_obj(&list[i + 1], env)?;
                 new_env.borrow_mut().set(param, val);
             }
-            let new_body = body.clone();
-            return eval_obj(&Object::List(new_body), &mut new_env);
+            return eval_obj(&Object::List(body), &mut new_env);
         }
         _ => return Err(format!("Not a lambda: {}", s)),
     }
