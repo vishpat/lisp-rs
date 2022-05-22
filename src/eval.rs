@@ -139,7 +139,7 @@ fn eval_function_definition(list: &Vec<Object>) -> Result<Object, String> {
     let params = match &list[1] {
         Object::List(list) => {
             let mut params = Vec::new();
-            for param in list {
+            for param in (*list).iter() {
                 match param {
                     Object::Symbol(s) => params.push(s.clone()),
                     _ => return Err(format!("Invalid lambda parameter")),
@@ -154,7 +154,7 @@ fn eval_function_definition(list: &Vec<Object>) -> Result<Object, String> {
         Object::List(list) => list.clone(),
         _ => return Err(format!("Invalid lambda")),
     };
-    Ok(Object::Lambda(params, body))
+    Ok(Object::Lambda(params, Rc::new(body.to_vec())))
 }
 
 fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
@@ -383,14 +383,14 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                     }
                     _ => {
                         let mut new_list = Vec::new();
-                        for obj in list {
+                        for obj in (*list).iter() {
                             let result = eval_obj(&obj, &mut current_env)?;
                             match result {
                                 Object::Void => {}
                                 _ => new_list.push(result),
                             }
                         }
-                        return Ok(Object::List(new_list));
+                        return Ok(Object::List(Rc::new(new_list)));
                     }
                 }
             }
@@ -490,9 +490,9 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
-            Object::List(vec![Object::String(
+            Object::List(Rc::new(vec![Object::String(
                 "apples mangoes bananas carrots broccoli".to_string()
-            )])
+            )]))
         );
     }
 
@@ -528,7 +528,7 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
-            Object::List(vec![Object::Float((3.14 * 5.0 * 5.0) as f64)])
+            Object::List(Rc::new(vec![Object::Float((3.14 * 5.0 * 5.0) as f64)]))
         );
     }
 
@@ -543,7 +543,7 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
-            Object::List(vec![Object::Integer((314 * 10 * 10) as i64)])
+            Object::List(Rc::new(vec![Object::Integer((314 * 10 * 10) as i64)]))
         );
     }
 
@@ -557,7 +557,7 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
-            Object::List(vec![Object::Integer((10 * 10) as i64)])
+            Object::List(Rc::new(vec![Object::Integer((10 * 10) as i64)]))
         );
     }
 
@@ -575,13 +575,13 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
-            Object::List(vec![Object::ListData(vec![
+            Object::List(Rc::new(vec![Object::ListData(vec![
                 Object::Integer(1),
                 Object::Integer(4),
                 Object::Integer(9),
                 Object::Integer(16),
                 Object::Integer(25)
-            ])])
+            ])]))
         );
     }
 
@@ -599,11 +599,11 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
-            Object::List(vec![Object::ListData(vec![
+            Object::List(Rc::new(vec![Object::ListData(vec![
                 Object::Integer(1),
                 Object::Integer(3),
                 Object::Integer(5)
-            ])])
+            ])]))
         );
     }
 
@@ -619,7 +619,7 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::List(vec![Object::Bool(true),]));
+        assert_eq!(result, Object::List(Rc::new(vec![Object::Bool(true),])));
     }
 
     #[test]
@@ -633,7 +633,10 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::List(vec![Object::Integer((89) as i64)]));
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::Integer((89) as i64)]))
+        );
     }
 
     #[test]
@@ -647,7 +650,10 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::List(vec![Object::Integer((120) as i64)]));
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::Integer((120) as i64)]))
+        );
     }
 
     #[test]
@@ -666,13 +672,12 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
-            Object::List(vec![Object::Integer((314 * 10 * 10) as i64)])
+            Object::List(Rc::new(vec![Object::Integer((314 * 10 * 10) as i64)]))
         );
     }
 
     #[test]
-    fn test_tail_recursion()
-    {
+    fn test_tail_recursion() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
             (
@@ -685,12 +690,14 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::List(vec![Object::Integer((125250) as i64)]));
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::Integer((125250) as i64)]))
+        );
     }
 
     #[test]
-    fn test_tail_recursive_factorial()
-    {
+    fn test_tail_recursive_factorial() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
             (
@@ -704,12 +711,14 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::List(vec![Object::Integer((3628800) as i64)]));
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::Integer((3628800) as i64)]))
+        );
     }
 
     #[test]
-    fn test_tail_recursive_fibonnaci()
-    {
+    fn test_tail_recursive_fibonnaci() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
             (
@@ -724,6 +733,9 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::List(vec![Object::Integer((55) as i64)]));
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::Integer((55) as i64)]))
+        );
     }
 }
