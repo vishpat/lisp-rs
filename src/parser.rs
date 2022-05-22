@@ -2,6 +2,7 @@ use crate::lexer::*;
 use crate::object::*;
 use std::error::Error;
 use std::fmt;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct ParseError {
@@ -55,12 +56,12 @@ fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
                 list.push(sub_list);
             }
             Token::RParen => {
-                return Ok(Object::List(list));
+                return Ok(Object::List(Rc::new(list)));
             }
         }
     }
 
-    Ok(Object::List(list))
+    Ok(Object::List(Rc::new(list)))
 }
 
 #[cfg(test)]

@@ -71,7 +71,7 @@ fn eval_function_definition(list: &Vec<Object>) -> Result<Object, String> {
     let params = match &list[1] {
         Object::List(list) => {
             let mut params = Vec::new();
-            for param in list {
+            for param in (*list).iter() {
                 match param {
                     Object::Symbol(s) => params.push(s.clone()),
                     _ => return Err(format!("Invalid lambda parameter")),
@@ -86,7 +86,7 @@ fn eval_function_definition(list: &Vec<Object>) -> Result<Object, String> {
         Object::List(list) => list.clone(),
         _ => return Err(format!("Invalid lambda")),
     };
-    Ok(Object::Lambda(params, body))
+    Ok(Object::Lambda(params, Rc::new(body.to_vec())))
 }
 
 fn eval_function_call(
@@ -142,7 +142,7 @@ fn eval_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, S
                     _ => new_list.push(result),
                 }
             }
-            Ok(Object::List(new_list))
+            Ok(Object::List(Rc::new(new_list)))
         }
     }
 }
