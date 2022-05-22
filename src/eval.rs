@@ -188,7 +188,7 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
-            Object::List(vec![Object::Integer((314 * 10 * 10) as i64)])
+            Object::List(Rc::new(vec![Object::Integer((314 * 10 * 10) as i64)]))
         );
     }
 
@@ -202,7 +202,7 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
-            Object::List(vec![Object::Integer((10 * 10) as i64)])
+            Object::List(Rc::new(vec![Object::Integer((10 * 10) as i64)]))
         );
     }
 
@@ -217,7 +217,10 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::List(vec![Object::Integer((89) as i64)]));
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::Integer((89) as i64)]))
+        );
     }
 
     #[test]
@@ -231,7 +234,10 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::List(vec![Object::Integer((120) as i64)]));
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::Integer((120) as i64)]))
+        );
     }
 
     #[test]
@@ -250,7 +256,7 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
-            Object::List(vec![Object::Integer((314 * 10 * 10) as i64)])
+            Object::List(Rc::new(vec![Object::Integer((314 * 10 * 10) as i64)]))
         );
     }
 }
