@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("{} ", param);
                 }
                 println!(")");
-                for expr in body {
+                for expr in (*body).iter() {
                     println!(" {}", expr);
                 }
             }

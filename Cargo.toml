@@ -1,6 +1,6 @@
 [package]
 name = "lisp-rs"
-version = "0.0.2"
+version = "0.2.2"
 edition = "2021"
 license = "MIT"
 homepage = "https://vishpat.github.io/lisp-rs"

@@ -1,4 +1,5 @@
 use std::fmt;
+use std::rc::Rc;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Object {
@@ -8,9 +9,9 @@ pub enum Object {
     Bool(bool),
     String(String),
     Symbol(String),
-    Lambda(Vec<String>, Vec<Object>),
-    List(Vec<Object>),
     ListData(Vec<Object>),
+    Lambda(Vec<String>, Rc<Vec<Object>>),
+    List(Rc<Vec<Object>>),
 }
 
 impl fmt::Display for Object {
@@ -28,14 +29,14 @@ impl fmt::Display for Object {
                     write!(f, "{} ", param)?;
                 }
                 write!(f, ")")?;
-                for expr in body {
+                for expr in (*body).iter() {
                     write!(f, " {}", expr)?;
                 }
                 Ok(())
             }
             Object::List(list) => {
                 write!(f, "(")?;
-                for (i, obj) in list.iter().enumerate() {
+                for (i, obj) in (*list).iter().enumerate() {
                     if i > 0 {
                         write!(f, " ")?;
                     }

@@ -2,6 +2,7 @@ use crate::lexer::*;
 use crate::object::*;
 use std::error::Error;
 use std::fmt;
+use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct ParseError {
@@ -57,12 +58,12 @@ fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
                 list.push(sub_list);
             }
             Token::RParen => {
-                return Ok(Object::List(list));
+                return Ok(Object::List(Rc::new(list)));
             }
         }
     }
 
-    Ok(Object::List(list))
+    Ok(Object::List(Rc::new(list)))
 }
 
 #[cfg(test)]
@@ -74,11 +75,11 @@ mod tests {
         let list = parse("(+ 1 2)").unwrap();
         assert_eq!(
             list,
-            Object::List(vec![
+            Object::List(Rc::new(vec![
                 Object::Symbol("+".to_string()),
                 Object::Integer(1),
                 Object::Integer(2),
-            ])
+            ]))
         );
     }
 
@@ -92,27 +93,27 @@ mod tests {
         let list = parse(program).unwrap();
         assert_eq!(
             list,
-            Object::List(vec![
-                Object::List(vec![
+            Object::List(Rc::new(vec![
+                Object::List(Rc::new(vec![
                     Object::Symbol("define".to_string()),
                     Object::Symbol("r".to_string()),
                     Object::Integer(10),
-                ]),
-                Object::List(vec![
+                ])),
+                Object::List(Rc::new(vec![
                     Object::Symbol("define".to_string()),
                     Object::Symbol("pi".to_string()),
                     Object::Integer(314),
-                ]),
-                Object::List(vec![
+                ])),
+                Object::List(Rc::new(vec![
                     Object::Symbol("*".to_string()),
                     Object::Symbol("pi".to_string()),
-                    Object::List(vec![
+                    Object::List(Rc::new(vec![
                         Object::Symbol("*".to_string()),
                         Object::Symbol("r".to_string()),
                         Object::Symbol("r".to_string()),
-                    ]),
-                ]),
-            ])
+                    ])),
+                ])),
+            ]))
         );
     }
 }
