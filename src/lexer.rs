@@ -28,7 +28,8 @@ impl fmt::Display for Token {
                 RParen => format!(")"),
                 If => format!("if"),
                 Keyword(s) => format!("{}", s),
-            }).as_str()
+            })
+            .as_str(),
         )
     }
 }
@@ -88,27 +89,22 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
                 }
 
                 if !word.is_empty() {
-                    tokens.push(
-                        if let Ok(i) = word.parse::<i64>() {
-                            Token::Integer(i)
-                        } else if let Ok(f) = word.parse::<f64>() {
-                            Token::Float(f)
-                        } else {
-                            match word.as_str() {
-                                "define" | "list" | "print" | "lambda" | "map" | "filter" | "reduce" =>
-                                    Token::Keyword(word),
-                                "if" =>
-                                    Token::If,
-                                "+" | "-" | "*" | "/" | "%" | "<" | ">" | "=" | "!=" | "&" | "|" =>
-                                    Token::BinaryOp(word),
-                                _ =>
-                                    Token::Symbol(word),
+                    tokens.push(if let Ok(i) = word.parse::<i64>() {
+                        Token::Integer(i)
+                    } else if let Ok(f) = word.parse::<f64>() {
+                        Token::Float(f)
+                    } else {
+                        match word.as_str() {
+                            "define" | "list" | "print" | "lambda" | "map" | "filter"
+                            | "reduce" => Token::Keyword(word),
+                            "if" => Token::If,
+                            "+" | "-" | "*" | "/" | "%" | "<" | ">" | "=" | "!=" | "&" | "|" => {
+                                Token::BinaryOp(word)
                             }
+                            _ => Token::Symbol(word),
                         }
-                    );
+                    });
                 }
-
-
             }
         }
     }
