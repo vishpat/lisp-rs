@@ -135,7 +135,7 @@ fn eval_list_data(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
     Ok(Object::ListData(new_list))
 }
 
-fn eval_function_definition(list: &Vec<Object>) -> Result<Object, String> {
+fn eval_function_definition(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let params = match &list[1] {
         Object::List(list) => {
             let mut params = Vec::new();
@@ -154,7 +154,7 @@ fn eval_function_definition(list: &Vec<Object>) -> Result<Object, String> {
         Object::List(list) => list.clone(),
         _ => return Err(format!("Invalid lambda")),
     };
-    Ok(Object::Lambda(params, Rc::new(body.to_vec())))
+    Ok(Object::Lambda(params, Rc::new(body.to_vec()), env.clone()))
 }
 
 fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
@@ -165,15 +165,15 @@ fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
     let lambda = eval_obj(&list[1], env)?;
     let arg_list = eval_obj(&list[2], env)?;
 
-    let (params, body) = match lambda {
-        Object::Lambda(p, b) => {
+    let (params, body, func_env) = match lambda {
+        Object::Lambda(p, b, e) => {
             if p.len() != 1 {
                 return Err(format!(
                     "Invalid number of parameters for map lambda function {:?}",
                     p
                 ));
             }
-            (p, b)
+            (p, b, e)
         }
         _ => return Err(format!("Not a lambda while evaluating map: {}", lambda)),
     };
@@ -187,7 +187,7 @@ fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
     let mut result_list = Vec::new();
     for arg in args.iter() {
         let val = eval_obj(&arg, env)?;
-        let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+        let mut new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
         new_env.borrow_mut().set(&func_param, val);
         let new_body = body.clone();
         let result = eval_obj(&Object::List(new_body), &mut new_env)?;
@@ -204,15 +204,15 @@ fn eval_filter(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     let lambda = eval_obj(&list[1], env)?;
     let arg_list = eval_obj(&list[2], env)?;
 
-    let (params, body) = match lambda {
-        Object::Lambda(p, b) => {
+    let (params, body, func_env) = match lambda {
+        Object::Lambda(p, b, e) => {
             if p.len() != 1 {
                 return Err(format!(
                     "Invalid number of parameters for map function {:?}",
                     p
                 ));
             }
-            (p, b)
+            (p, b, e)
         }
         _ => return Err(format!("Not a lambda while evaluating map: {}", lambda)),
     };
@@ -226,7 +226,7 @@ fn eval_filter(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     let mut result_list = Vec::new();
     for arg in args.iter() {
         let val = eval_obj(&arg, env)?;
-        let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+        let mut new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
         new_env.borrow_mut().set(&func_param, val.clone());
         let new_body = body.clone();
         let result_obj = eval_obj(&Object::List(new_body), &mut new_env)?;
@@ -249,15 +249,15 @@ fn eval_reduce(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     let lambda = eval_obj(&list[1], env)?;
     let arg_list = eval_obj(&list[2], env)?;
 
-    let (params, body) = match lambda {
-        Object::Lambda(p, b) => {
+    let (params, body, func_env) = match lambda {
+        Object::Lambda(p, b, e) => {
             if p.len() != 2 {
                 return Err(format!(
                     "Invalid number of parameters for reduce function {:?}",
                     p
                 ));
             }
-            (p, b)
+            (p, b, e)
         }
         _ => return Err(format!("Not a lambda while evaluating map: {}", lambda)),
     };
@@ -279,7 +279,7 @@ fn eval_reduce(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     let mut accumulator = eval_obj(&args[0], env)?;
 
     for arg in args[1..].iter() {
-        let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+        let mut new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
         new_env
             .borrow_mut()
             .set(&reduce_param1, accumulator.clone());
@@ -315,7 +315,7 @@ fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object
             "define" => return eval_define(&list, env),
             "list" => return eval_list_data(&list, env),
             "print" => return print_list(&list, env),
-            "lambda" => return eval_function_definition(&list),
+            "lambda" => return eval_function_definition(&list, env),
             "map" => return eval_map(&list, env),
             "filter" => return eval_filter(&list, env),
             "reduce" => return eval_reduce(&list, env),
@@ -367,9 +367,9 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
 
                         let func = lamdba.unwrap();
                         match func {
-                            Object::Lambda(params, body) => {
+                            Object::Lambda(params, body, func_env) => {
                                 let new_env =
-                                    Rc::new(RefCell::new(Env::extend(current_env.clone())));
+                                    Rc::new(RefCell::new(Env::extend(func_env.clone())));
                                 for (i, param) in params.iter().enumerate() {
                                     let val = eval_obj(&list[i + 1], &mut current_env)?;
                                     new_env.borrow_mut().set(param, val);
@@ -398,7 +398,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                 return eval_symbol(&s, &mut current_env);
             }
             Object::Void => return Ok(Object::Void),
-            Object::Lambda(_params, _body) => return Ok(Object::Void),
+            Object::Lambda(_params, _body, _func_env) => return Ok(Object::Void),
             Object::Bool(_) => return Ok(obj.clone()),
             Object::Integer(n) => return Ok(Object::Integer(n)),
             Object::Float(n) => return Ok(Object::Float(n)),
