@@ -720,6 +720,26 @@ mod tests {
     }
 
     #[test]
+    fn test_closure1() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+            (
+                (define add-n 
+                   (lambda (n) 
+                      (lambda (a) (+ n a))))
+                (define add-5 (add-n 5))
+                (add-5 10)
+            )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::Integer((15) as i64)]))
+        );
+    }
+
+    #[test]
     fn test_tail_recursive_fibonnaci() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
