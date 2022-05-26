@@ -135,7 +135,10 @@ fn eval_list_data(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
     Ok(Object::ListData(new_list))
 }
 
-fn eval_function_definition(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_function_definition(
+    list: &Vec<Object>,
+    env: &mut Rc<RefCell<Env>>,
+) -> Result<Object, String> {
     let params = match &list[1] {
         Object::List(list) => {
             let mut params = Vec::new();
@@ -368,8 +371,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                         let func = lamdba.unwrap();
                         match func {
                             Object::Lambda(params, body, func_env) => {
-                                let new_env =
-                                    Rc::new(RefCell::new(Env::extend(func_env.clone())));
+                                let new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
                                 for (i, param) in params.iter().enumerate() {
                                     let val = eval_obj(&list[i + 1], &mut current_env)?;
                                     new_env.borrow_mut().set(param, val);
@@ -378,7 +380,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                                 current_env = new_env.clone();
                                 continue;
                             }
-                            _ => return Err(format!("Not a lambda: {}", s)),
+                            _ => return Err(format!("Not a lambda: {} {:?}", s, func)),
                         }
                     }
                     _ => {

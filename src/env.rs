@@ -16,7 +16,13 @@ impl Env {
 
     pub fn extend(parent: Rc<RefCell<Self>>) -> Env {
         let mut vars = HashMap::new();
-        vars.extend(parent.borrow().vars.iter().map(|(k, v)| (k.clone(), v.clone())));
+        vars.extend(
+            parent
+                .borrow()
+                .vars
+                .iter()
+                .map(|(k, v)| (k.clone(), v.clone())),
+        );
 
         Env {
             vars: vars,
