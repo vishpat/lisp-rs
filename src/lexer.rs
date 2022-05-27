@@ -96,7 +96,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
                     } else {
                         match word.as_str() {
                             "define" | "list" | "print" | "lambda" | "map" | "filter"
-                            | "reduce" => Token::Keyword(word),
+                            | "reduce" | "range" => Token::Keyword(word),
                             "if" => Token::If,
                             "+" | "-" | "*" | "/" | "%" | "<" | ">" | "=" | "!=" | "&" | "|" => {
                                 Token::BinaryOp(word)

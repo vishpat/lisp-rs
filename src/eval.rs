@@ -135,6 +135,41 @@ fn eval_list_data(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
     Ok(Object::ListData(new_list))
 }
 
+fn eval_range(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    if list.len() != 3 && list.len() != 4 {
+        return Err(format!("Invalid number of arguments for range"));
+    }
+
+    let start = eval_obj(&list[1], env)?;
+    let end = eval_obj(&list[2], env)?;
+    let mut stride = 1;
+    if list.len() == 4 {
+        let stride_obj = eval_obj(&list[3], env)?;
+        stride = match stride_obj {
+            Object::Integer(i) => i,
+            _ => return Err(format!("Invalid stride for range")),
+        };
+    }
+
+    let start = match start {
+        Object::Integer(i) => i,
+        _ => return Err(format!("Invalid start for range")),
+    };
+    let end = match end {
+        Object::Integer(i) => i,
+        _ => return Err(format!("Invalid end for range")),
+    };
+
+    let mut new_list = Vec::new();
+    let mut i = start;
+    while i < end {
+        new_list.push(Object::Integer(i));
+        i += stride;
+    }
+
+    Ok(Object::ListData(new_list))
+}
+
 fn eval_function_definition(
     list: &Vec<Object>,
     env: &mut Rc<RefCell<Env>>,
@@ -322,6 +357,7 @@ fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object
             "map" => return eval_map(&list, env),
             "filter" => return eval_filter(&list, env),
             "reduce" => return eval_reduce(&list, env),
+            "range" => return eval_range(&list, env),
             _ => return Err(format!("Unknown keyword: {}", s)),
         },
         _ => {
@@ -531,6 +567,45 @@ mod tests {
         assert_eq!(
             result,
             Object::List(Rc::new(vec![Object::Float((3.14 * 5.0 * 5.0) as f64)]))
+        );
+    }
+
+    #[test]
+    fn test_range_no_stride() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "(range 0 11)";
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::ListData(vec![
+                Object::Integer(0),
+                Object::Integer(1),
+                Object::Integer(2),
+                Object::Integer(3),
+                Object::Integer(4),
+                Object::Integer(5),
+                Object::Integer(6),
+                Object::Integer(7),
+                Object::Integer(8),
+                Object::Integer(9),
+                Object::Integer(10)
+            ])
+        );
+    }
+
+    #[test]
+    fn test_range_with_stride() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "(range 0 10 3)";
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::ListData(vec![
+                Object::Integer(0),
+                Object::Integer(3),
+                Object::Integer(6),
+                Object::Integer(9),
+            ])
         );
     }
 
