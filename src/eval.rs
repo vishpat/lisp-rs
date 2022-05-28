@@ -398,6 +398,16 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                         }
                         continue;
                     }
+                    Object::Lambda(params, body, func_env) => {
+                        let new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
+                        for (i, param) in params.iter().enumerate() {
+                            let val = eval_obj(&list[i + 1], &mut current_env)?;
+                            new_env.borrow_mut().set(param, val);
+                        }
+                        current_obj = Box::new(Object::List(body.clone()));
+                        current_env = new_env;
+                        continue;
+                    }
                     Object::Symbol(s) => {
                         let lamdba = current_env.borrow_mut().get(s);
                         if lamdba.is_none() {
@@ -428,7 +438,18 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                                 _ => new_list.push(result),
                             }
                         }
-                        return Ok(Object::List(Rc::new(new_list)));
+                        let head = &new_list[0];
+                        match head {
+                            Object::Lambda(_, _, _) => {
+                                return eval_obj(
+                                    &Object::List(Rc::new(new_list)),
+                                    &mut current_env,
+                                );
+                            }
+                            _ => {
+                                return Ok(Object::List(Rc::new(new_list)));
+                            }
+                        }
                     }
                 }
             }
