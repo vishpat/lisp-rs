@@ -10,14 +10,14 @@ use std::rc::Rc;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
-pub fn eval(input: String) -> String {
+pub fn lisp_rs_eval(input: &str) -> String {
     let mut env = Rc::new(RefCell::new(env::Env::new()));
-    let val = eval::eval(input.as_ref(), &mut env);
+    let val = eval::eval(input, &mut env);
     match val {
-        Ok(Object::Void) => "".to_string(),
-        Ok(Object::Integer(n)) => n.to_string(),
-        Ok(Object::Bool(b)) => b.to_string(),
-        Ok(Object::Symbol(s)) => s.to_string(),
+        Ok(Object::Void) => "".to_string().into(),
+        Ok(Object::Integer(n)) => n.to_string().into(),
+        Ok(Object::Bool(b)) => b.to_string().into(),
+        Ok(Object::Symbol(s)) => s.to_string().into(),
         Ok(Object::Lambda(params, body, _)) => {
             let mut res = "Lambda(".to_string();
             for param in params {
@@ -49,13 +49,13 @@ pub fn eval(input: String) -> String {
                 res.push_str(&format!("{}", obj));
             }
             res.push_str(")");
-            res
+            res.to_string().into()
         }
-        Ok(Object::String(s)) => s.to_string(),
-        Ok(Object::Keyword(s)) => s.to_string(),
-        Ok(Object::BinaryOp(s)) => s.to_string(),
-        Ok(Object::Float(n)) => n.to_string(),
-        Ok(Object::If) => "If".to_string(),
-        Err(e) => e.to_string(),
+        Ok(Object::String(s)) => s.to_string().into(),
+        Ok(Object::Keyword(s)) => s.to_string().into(),
+        Ok(Object::BinaryOp(s)) => s.to_string().into(),
+        Ok(Object::Float(n)) => n.to_string().into(),
+        Ok(Object::If) => "If".to_string().into(),
+        Err(e) => e.to_string().into(),
     }
 }
