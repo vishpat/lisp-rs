@@ -856,4 +856,20 @@ mod tests {
             Object::List(Rc::new(vec![Object::Integer((55) as i64)]))
         );
     }
+
+    #[test]
+    fn test_inline_lambda() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (
+            ((lambda (x y) (+ x y)) 10 20)
+        )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::Integer((30) as i64)]))
+        );
+    }
 }
