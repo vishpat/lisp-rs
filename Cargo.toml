@@ -1,6 +1,6 @@
 [package]
 name = "lisp-rs"
-version = "0.2.3"
+version = "0.3.0"
 edition = "2021"
 license = "MIT"
 homepage = "https://vishpat.github.io/lisp-rs"
@@ -11,6 +11,14 @@ Lisp interpreter in Rust
 """
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "lisp_rs"
+path = "src/lib.rs"
+
+[[bin]]
+name = "lisp-rs"
+path = "src/main.rs"
 
 [dependencies]
 linefeed = "0.6.0"
