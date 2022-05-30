@@ -10,7 +10,7 @@ The interpreter is based on a modified subset of [Scheme](https://en.wikipedia.o
 
 ## Implementation
 
-The interpreter has been implemented in three phases across different branches.
+The interpreter has been implemented in three phases
 
 - Phase I: Complete interpreter and REPL implementation with support for basic data types (integers and boolean), variables, lambdas, and lambda calls (branch 0.0.1)
 - Phase II: Support for advanced data types (string, float, and lists) and functional constructs (branch 0.0.2)
