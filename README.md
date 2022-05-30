@@ -21,7 +21,7 @@ For a detailed code-walkthrough about Phase-I implementation refer to the [docs]
 
 ## WASM
 
-The interpreter has also been compiled to WASM and is hosted here.
+The interpreter has also been compiled to WASM so that it can run in a browser and is hosted here.
 
 [![asciicast](https://asciinema.org/a/VVQQfGpp15a4BaoNgnEKIqqrr.svg)](https://asciinema.org/a/VVQQfGpp15a4BaoNgnEKIqqrr)
 
