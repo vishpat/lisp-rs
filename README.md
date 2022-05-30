@@ -1,6 +1,14 @@
 # lisp-rs
 
-A simple Lisp interpreter in Rust. The interpreter was developed as a **teaching aid** to explain how Lisp interpreters work and how can they be implemented using the Rust programming language. The interpreter is in no way close to production and might change from time to time.
+A simple Lisp interpreter in Rust. The interpreter was developed as a **teaching aid** to explain how Lisp interpreters work and how can they be implemented using the Rust programming language. 
+
+## Dialect
+The interpreter is based on a modified subset of [Scheme](https://en.wikipedia.org/wiki/Scheme_(programming_language)). More information about the dialect can be found at
+
+- [Syntax](https://github.com/vishpat/lisp-rs/wiki/Lisp-Syntax)
+- [Sample Programs](https://github.com/vishpat/lisp-rs/wiki/Sample-programs)
+
+## Implementation
 
 The interpreter has been implemented in three phases across different branches.
 
