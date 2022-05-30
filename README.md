@@ -19,10 +19,6 @@ The interpreter has been implemented in three phases across different branches.
 
 For a detailed code-walkthrough about Phase-I implementation refer to the [docs](https://vishpat.github.io/lisp-rs). For code-walkthrough of all the phases, get the [e-book](https://www.amazon.com/dp/B0B1Z48DMT/ref=cm_sw_r_apan_QD16PC5E2EZWMKB1EZMK).
 
-### WASM
-
-The interpreter has also been compiled to WASM so that it can run in a browser and is hosted here.
-
 [![asciicast](https://asciinema.org/a/VVQQfGpp15a4BaoNgnEKIqqrr.svg)](https://asciinema.org/a/VVQQfGpp15a4BaoNgnEKIqqrr)
 
 ## REPL
@@ -34,3 +30,7 @@ cargo run --features="build-binary"
 ```
 cargo test
 ```
+
+## WASM
+
+The interpreter has also been compiled to WASM so that it can run in a browser and is hosted here.
