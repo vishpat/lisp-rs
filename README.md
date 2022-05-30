@@ -1,6 +1,6 @@
 # lisp-rs
 
-A simple Lisp interpreter in Rust. The interpreter was developed as a **teaching aid** to explain how Lisp interpreters work and how can they be implemented using the Rust programming language. 
+A simple Lisp interpreter in Rust. The interpreter has been developed as a **teaching aid** to explain how Lisp interpreters work and how can they be implemented using the Rust programming language. 
 
 ## Dialect
 The interpreter is based on a modified subset of [Scheme](https://en.wikipedia.org/wiki/Scheme_(programming_language)). More information about the dialect can be found at
