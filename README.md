@@ -33,4 +33,4 @@ cargo test
 
 ## WASM
 
-The interpreter has also been compiled to WASM so that it can run in a browser and is hosted here.
+The interpreter has also been compiled to WASM so that it can run in a browser and is hosted [here](https://vishpat.github.io/lisp-rs-wasm).
