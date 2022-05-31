@@ -3,7 +3,15 @@
 A simple Lisp interpreter/library in Rust. The interpreter/library was initially developed as a **teaching aid** to explain how Lisp interpreters work and how can they be implemented using the Rust programming language. However the interpreter seems to be taking life of it's own and has been ported to the [web](https://vishpat.github.io/lisp-rs-wasm) using [WASM](https://webassembly.org). The interpreter is available as a [crate](https://crates.io/crates/lisp-rs) and can be used to embed a Lisp interpreter in your Rust projects. The WASM implementation uses the lisp-rs as a library to implement the online interpreter.
 
 ## Dialect
-The interpreter is based on a modified subset of [Scheme](https://en.wikipedia.org/wiki/Scheme_(programming_language)). More information about the dialect can be found at
+The interpreter is based on a modified subset of [Scheme](https://en.wikipedia.org/wiki/Scheme_(programming_language)). Following are the features supported by the interpreter
+
+- Variables and Constants
+- Functions (lambdas)
+- Functional constructs such as map, filter and reduce
+- Closures
+- Tail Call Optimization
+
+More information about the dialect can be found at
 
 - [Syntax](https://github.com/vishpat/lisp-rs/wiki/Lisp-Syntax)
 - [Sample Programs](https://github.com/vishpat/lisp-rs/wiki/Sample-programs)
