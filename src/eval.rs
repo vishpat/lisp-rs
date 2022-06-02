@@ -152,6 +152,14 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
     }
 }
 
+fn eval_begin(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let mut result = Object::Void;
+    for obj in list[1..].iter() {
+        result = eval_obj(obj, env)?;
+    }
+    Ok(result)
+}
+
 fn eval_define(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for define"));
@@ -402,6 +410,7 @@ fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object
     match head {
         Object::Keyword(s) => match s.as_str() {
             "define" => return eval_define(&list, env),
+            "begin" => return eval_begin(&list, env),
             "list" => return eval_list_data(&list, env),
             "print" => return print_list(&list, env),
             "lambda" => return eval_function_definition(&list, env),
@@ -953,39 +962,33 @@ mod tests {
     fn test_inline_lambda() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-        (
+        (begin
             ((lambda (x y) (+ x y)) 10 20)
         )
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((30) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((30) as i64));
     }
 
     #[test]
     fn test_car() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-        (
+        (begin
             (car (list 1 2 3))
         )
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((1) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((1) as i64));
     }
 
     #[test]
     fn test_cdr() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-        (
+        (begin
             (cdr (list 1 2 3))
         )
         ";
@@ -993,10 +996,7 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
-            Object::List(Rc::new(vec![Object::ListData(vec![
-                Object::Integer(2),
-                Object::Integer(3),
-            ])]))
+            Object::ListData(vec![Object::Integer(2), Object::Integer(3),])
         );
     }
 
@@ -1004,23 +1004,20 @@ mod tests {
     fn test_length() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-        (
+        (begin
             (length (list 1 2 3))
         )
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((3) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((3) as i64));
     }
 
     #[test]
     fn test_sum_list_of_integers() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-        (
+        (begin
             (define sum-list 
                 (lambda (l) 
                     (if (null? l) 0 
@@ -1030,17 +1027,14 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((15) as i64)]))
-        );
+        assert_eq!(result, Object::Integer(15));
     }
 
     #[test]
     fn test_function_application() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-        (
+        (begin
             (define (double value) 
                 (* 2 value))
             (define (apply-twice fn value) 
@@ -1051,9 +1045,6 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((20) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((20) as i64));
     }
 }
