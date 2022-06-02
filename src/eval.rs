@@ -154,8 +154,10 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
 
 fn eval_begin(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let mut result = Object::Void;
+    let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+
     for obj in list[1..].iter() {
-        result = eval_obj(obj, env)?;
+        result = eval_obj(obj, &mut new_env)?;
     }
     Ok(result)
 }
@@ -1016,5 +1018,51 @@ mod tests {
 
         let result = eval(program, &mut env).unwrap();
         assert_eq!(result, Object::Integer((20) as i64));
+    }
+
+    #[test]
+    fn test_begin_scope_test() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (begin
+            (define a 10)
+            (define b 20)
+            (define c 30)
+            (begin
+                (define a 20)
+                (define b 30)
+                (define c 40)
+                (list a b c)
+            )
+        )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::ListData(vec![
+                Object::Integer(20),
+                Object::Integer(30),
+                Object::Integer(40),
+            ])
+        );
+    }
+
+    #[test]
+    fn test_begin_scope_test_2() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (begin 
+            (define x 10)
+            (begin
+                (define x 20)
+                x 
+            )
+            x
+        )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(result, Object::Integer((10) as i64));
     }
 }
