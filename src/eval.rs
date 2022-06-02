@@ -49,6 +49,15 @@ fn eval_length(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     }
 }
 
+fn eval_is_null(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let obj = eval_obj(&list[1], env)?;
+    match obj {
+        Object::List(list) => Ok(Object::Bool(list.len() == 0)),
+        Object::ListData(list) => Ok(Object::Bool(list.len() == 0)),
+        _ => Err(format!("{} is not a list", obj)),
+    }
+}
+
 fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for infix operator"));
@@ -403,6 +412,7 @@ fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object
             "car" => return eval_car(&list, env),
             "cdr" => return eval_cdr(&list, env),
             "length" => return eval_length(&list, env),
+            "null?" => return eval_is_null(&list, env),
             _ => return Err(format!("Unknown keyword: {}", s)),
         },
         _ => {
@@ -1003,6 +1013,26 @@ mod tests {
         assert_eq!(
             result,
             Object::List(Rc::new(vec![Object::Integer((3) as i64)]))
+        );
+    }
+
+    #[test]
+    fn test_sum_list_of_integers() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (
+            (define sum-list 
+                (lambda (l) 
+                    (if (null? l) 0 
+                        (+ (car l) (sum-list (cdr l))))))
+            (sum-list (list 1 2 3 4 5))
+        )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::Integer((15) as i64)]))
         );
     }
 }
