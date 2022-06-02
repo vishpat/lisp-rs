@@ -766,6 +766,23 @@ mod tests {
     }
 
     #[test]
+    fn test_abs() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+            (
+                (define (abs n) (if (< n 0) (* -1 n) n))
+                (abs -5)
+            )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::Integer((5) as i64)]))
+        );
+    }
+
+    #[test]
     fn test_circle_area_no_lambda() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
