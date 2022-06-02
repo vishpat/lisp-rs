@@ -643,16 +643,14 @@ mod tests {
     #[test]
     fn test_area_of_a_circle_float() {
         let mut env = Rc::new(RefCell::new(Env::new()));
-        let program = "(
-                        (define r 5.0)
-                        (define pi 3.14)
-                        (* pi (* r r))
-                      )";
+        let program = "
+            (begin
+                (define r 5.0)
+                (define pi 3.14)
+                (* pi (* r r))
+            )";
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Float((3.14 * 5.0 * 5.0) as f64)]))
-        );
+        assert_eq!(result, Object::Float((3.14 * 5.0 * 5.0) as f64));
     }
 
     #[test]
@@ -697,37 +695,33 @@ mod tests {
     #[test]
     fn test_area_of_a_circle() {
         let mut env = Rc::new(RefCell::new(Env::new()));
-        let program = "(
-                        (define r 10)
-                        (define pi 314)
-                        (* pi (* r r))
-                      )";
+        let program = "
+            (begin
+                (define r 10)
+                (define pi 314)
+                (* pi (* r r))
+            )";
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((314 * 10 * 10) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((314 * 10 * 10) as i64));
     }
 
     #[test]
     fn test_sqr_function() {
         let mut env = Rc::new(RefCell::new(Env::new()));
-        let program = "(
-                        (define sqr (lambda (r) (* r r))) 
-                        (sqr 10)
-                       )";
+        let program = "
+            (begin
+                (define sqr (lambda (r) (* r r))) 
+                (sqr 10)
+            )";
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((10 * 10) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((10 * 10) as i64));
     }
 
     #[test]
     fn test_map() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-            (
+            (begin
                 (define sqr (lambda (r) (* r r)))
                 (define l (list 1 2 3 4 5))
                 (map sqr l)
@@ -737,13 +731,13 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
-            Object::List(Rc::new(vec![Object::ListData(vec![
+            Object::ListData(vec![
                 Object::Integer(1),
                 Object::Integer(4),
                 Object::Integer(9),
                 Object::Integer(16),
                 Object::Integer(25)
-            ])]))
+            ])
         );
     }
 
@@ -751,7 +745,7 @@ mod tests {
     fn test_filter() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-            (
+            (begin
                 (define odd (lambda (v) (= 1 (% v 2))))
                 (define l (list 1 2 3 4 5))
                 (filter odd l)
@@ -761,11 +755,11 @@ mod tests {
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
             result,
-            Object::List(Rc::new(vec![Object::ListData(vec![
+            Object::ListData(vec![
                 Object::Integer(1),
                 Object::Integer(3),
                 Object::Integer(5)
-            ])]))
+            ])
         );
     }
 
@@ -773,7 +767,7 @@ mod tests {
     fn test_reduce() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-            (
+            (begin
                 (define odd (lambda (v) (= 1 (% v 2))))
                 (define l (list 1 2 3 4 5))
                 (reduce (lambda (x y) (or x y)) (map odd l))
@@ -781,65 +775,59 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::List(Rc::new(vec![Object::Bool(true),])));
+        assert_eq!(result, Object::Bool(true));
     }
 
     #[test]
     fn test_fibonaci() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-            (
-                (define fib (lambda (n) (if (< n 2) 1 (+ (fib (- n 1)) (fib (- n 2))))))
+            (begin
+                (define fib (lambda (n) 
+                    (if (< n 2) 1 
+                        (+ (fib (- n 1)) 
+                            (fib (- n 2))))))
                 (fib 10)
             )
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((89) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((89) as i64));
     }
 
     #[test]
     fn test_factorial() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-            (
+            (begin
                 (define fact (lambda (n) (if (< n 1) 1 (* n (fact (- n 1))))))
                 (fact 5)
             )
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((120) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((120) as i64));
     }
 
     #[test]
     fn test_abs() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-            (
+            (begin
                 (define (abs n) (if (< n 0) (* -1 n) n))
                 (abs -5)
             )
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((5) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((5) as i64));
     }
 
     #[test]
     fn test_circle_area_no_lambda() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-            (
+            (begin
                 (define pi 314)
                 (define r 10)
                 (define (sqr r) (* r r))
@@ -849,17 +837,14 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((314 * 10 * 10) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((314 * 10 * 10) as i64));
     }
 
     #[test]
     fn test_circle_area_function() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-            (
+            (begin
                 (define pi 314)
                 (define r 10)
                 (define sqr (lambda (r) (* r r)))
@@ -869,17 +854,14 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((314 * 10 * 10) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((314 * 10 * 10) as i64));
     }
 
     #[test]
     fn test_tail_recursion() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-            (
+            (begin
                 (define sum-n 
                    (lambda (n a) 
                       (if (= n 0) a 
@@ -889,17 +871,14 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((125250) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((125250) as i64));
     }
 
     #[test]
     fn test_tail_recursive_factorial() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-            (
+            (begin
                 (define fact 
                     (lambda (n a) 
                       (if (= n 1) a 
@@ -910,17 +889,14 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((3628800) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((3628800) as i64));
     }
 
     #[test]
     fn test_closure1() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-            (
+            (begin
                 (define add-n 
                    (lambda (n) 
                       (lambda (a) (+ n a))))
@@ -930,17 +906,14 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((15) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((15) as i64));
     }
 
     #[test]
     fn test_tail_recursive_fibonnaci() {
         let mut env = Rc::new(RefCell::new(Env::new()));
         let program = "
-            (
+            (begin
                 (define fib
                   (lambda (n a b) 
                      (if (= n 0) a 
@@ -952,10 +925,7 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(
-            result,
-            Object::List(Rc::new(vec![Object::Integer((55) as i64)]))
-        );
+        assert_eq!(result, Object::Integer((55) as i64));
     }
 
     #[test]
