@@ -18,6 +18,37 @@ fn print_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, 
     Ok(Object::Void)
 }
 
+fn eval_car(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let l = eval_obj(&list[1], env)?;
+    match l {
+        Object::ListData(list) => Ok(list[0].clone()),
+        _ => Err(format!("{} is not a list", l)),
+    }
+}
+
+fn eval_cdr(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let l = eval_obj(&list[1], env)?;
+    let mut new_list = vec![];
+    match l {
+        Object::ListData(list) => {
+            for obj in list[1..].iter() {
+                new_list.push(obj.clone());
+            }
+            Ok(Object::ListData(new_list))
+        }
+        _ => Err(format!("{} is not a list", l)),
+    }
+}
+
+fn eval_length(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let obj = eval_obj(&list[1], env)?;
+    match obj {
+        Object::List(list) => Ok(Object::Integer(list.len() as i64)),
+        Object::ListData(list) => Ok(Object::Integer(list.len() as i64)),
+        _ => Err(format!("{} is not a list", obj)),
+    }
+}
+
 fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for infix operator"));
@@ -369,6 +400,9 @@ fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object
             "filter" => return eval_filter(&list, env),
             "reduce" => return eval_reduce(&list, env),
             "range" => return eval_range(&list, env),
+            "car" => return eval_car(&list, env),
+            "cdr" => return eval_cdr(&list, env),
+            "length" => return eval_length(&list, env),
             _ => return Err(format!("Unknown keyword: {}", s)),
         },
         _ => {
@@ -918,6 +952,57 @@ mod tests {
         assert_eq!(
             result,
             Object::List(Rc::new(vec![Object::Integer((30) as i64)]))
+        );
+    }
+
+    #[test]
+    fn test_car() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (
+            (car (list 1 2 3))
+        )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::Integer((1) as i64)]))
+        );
+    }
+
+    #[test]
+    fn test_cdr() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (
+            (cdr (list 1 2 3))
+        )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::ListData(vec![
+                Object::Integer(2),
+                Object::Integer(3),
+            ])]))
+        );
+    }
+
+    #[test]
+    fn test_length() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (
+            (length (list 1 2 3))
+        )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::Integer((3) as i64)]))
         );
     }
 }
