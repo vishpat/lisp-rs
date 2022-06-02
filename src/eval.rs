@@ -1035,4 +1035,25 @@ mod tests {
             Object::List(Rc::new(vec![Object::Integer((15) as i64)]))
         );
     }
+
+    #[test]
+    fn test_function_application() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (
+            (define (double value) 
+                (* 2 value))
+            (define (apply-twice fn value) 
+                (fn (fn value)))
+        
+            (apply-twice double 5)
+        )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::List(Rc::new(vec![Object::Integer((20) as i64)]))
+        );
+    }
 }
