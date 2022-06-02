@@ -98,11 +98,11 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
                 }
                 _ => Err(format!("Invalid types for != operator {} {}", left, right)),
             },
-            "&" => match (left, right) {
+            "and" => match (left, right) {
                 (Object::Bool(l), Object::Bool(r)) => Ok(Object::Bool(*l && *r)),
                 _ => Err(format!("Invalid types for & operator {} {}", left, right)),
             },
-            "|" => match (left, right) {
+            "or" => match (left, right) {
                 (Object::Bool(l), Object::Bool(r)) => Ok(Object::Bool(*l || *r)),
                 _ => Err(format!("Invalid types for | operator {} {}", left, right)),
             },
@@ -723,7 +723,7 @@ mod tests {
             (
                 (define odd (lambda (v) (= 1 (% v 2))))
                 (define l (list 1 2 3 4 5))
-                (reduce (lambda (x y) (| x y)) (map odd l))
+                (reduce (lambda (x y) (or x y)) (map odd l))
             )
         ";
 
@@ -802,7 +802,6 @@ mod tests {
         );
     }
 
- 
     #[test]
     fn test_circle_area_function() {
         let mut env = Rc::new(RefCell::new(Env::new()));
