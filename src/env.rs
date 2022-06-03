@@ -14,6 +14,15 @@ impl Env {
         Default::default()
     }
 
+    pub fn update(&mut self, data: Rc<RefCell<Self>>) {
+        self.vars.extend(
+            data.borrow()
+                .vars
+                .iter()
+                .map(|(k, v)| (k.clone(), v.clone())),
+        );
+    }
+
     pub fn extend(parent: Rc<RefCell<Self>>) -> Env {
         let mut vars = HashMap::new();
         vars.extend(

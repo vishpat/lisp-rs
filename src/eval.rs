@@ -162,6 +162,48 @@ fn eval_begin(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, 
     Ok(result)
 }
 
+fn eval_let(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    let mut result = Object::Void;
+    let bindings_env = Rc::new(RefCell::new(Env::new()));
+
+    if list.len() < 3 {
+        return Err(format!("Invalid number of arguments for let"));
+    }
+
+    let bindings = match list[1].clone() {
+        Object::List(bindings) => bindings,
+        _ => return Err(format!("Invalid bindings for let")),
+    };
+
+    for binding in bindings.iter() {
+        let binding = match binding {
+            Object::List(binding) => binding,
+            _ => return Err(format!("Invalid binding for let")),
+        };
+
+        if binding.len() != 2 {
+            return Err(format!("Invalid binding for let"));
+        }
+
+        let name = match binding[0].clone() {
+            Object::Symbol(name) => name,
+            _ => return Err(format!("Invalid binding for let")),
+        };
+
+        let value = eval_obj(&binding[1], env)?;
+        bindings_env.borrow_mut().set(name.as_str(), value);
+    }
+
+    println!("let arguments {:?}", bindings_env);
+    let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+    new_env.borrow_mut().update(bindings_env);
+
+    for obj in list[2..].iter() {
+        result = eval_obj(obj, &mut new_env)?;
+    }
+    Ok(result)
+}
+
 fn eval_define(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for define"));
@@ -413,6 +455,7 @@ fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object
         Object::Keyword(s) => match s.as_str() {
             "define" => return eval_define(&list, env),
             "begin" => return eval_begin(&list, env),
+            "let" => return eval_let(&list, env),
             "list" => return eval_list_data(&list, env),
             "print" => return print_list(&list, env),
             "lambda" => return eval_function_definition(&list, env),
@@ -1064,5 +1107,54 @@ mod tests {
 
         let result = eval(program, &mut env).unwrap();
         assert_eq!(result, Object::Integer((10) as i64));
+    }
+
+    #[test]
+    fn test_let_1() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (begin
+            (let ((a 10) (b 20))
+                (list a b)
+            )
+        )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::ListData(vec![Object::Integer(10), Object::Integer(20),])
+        );
+    }
+
+    #[test]
+    fn test_let_2() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (begin
+            (define a 100)
+            (let ((a 10) (b 20))
+                (list a b)
+            )
+            a
+        )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(result, Object::Integer(100));
+    }
+
+    #[test]
+    fn test_let_3() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+            (let ((x 2) (y 3))
+                (let ((x 7)
+                      (z (+ x y)))
+                    (* z x))) 
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(result, Object::Integer(35));
     }
 }
