@@ -6,8 +6,6 @@ mod parser;
 
 use linefeed::{Interface, ReadResult};
 use object::Object;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 const PROMPT: &str = "lisp-rs> ";
 

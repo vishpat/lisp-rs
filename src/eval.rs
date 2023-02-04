@@ -102,7 +102,7 @@ fn eval_function_call(
         Object::Lambda(params, body) => {
             let mut new_env = Env::extend(env);
             for (i, param) in params.iter().enumerate() {
-                let val = eval_obj(&list[i + 1], env)?;
+                let val = eval_obj(&list[i + 1], &mut new_env)?;
                 new_env.set(param, val);
             }
             return eval_obj(&Object::List(body), &mut new_env);
@@ -170,14 +170,14 @@ mod tests {
 
     #[test]
     fn test_simple_add() {
-        let mut env = Env::new();
+        let mut env = Box::new(Env::new());
         let result = eval("(+ 1 2)", &mut env).unwrap();
         assert_eq!(result, Object::Integer(3));
     }
 
     #[test]
     fn test_area_of_a_circle() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Box::new(Env::new());
         let program = "(
                         (define r 10)
                         (define pi 314)
@@ -192,7 +192,7 @@ mod tests {
 
     #[test]
     fn test_sqr_function() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Box::new(Env::new());
         let program = "(
                         (define sqr (lambda (r) (* r r))) 
                         (sqr 10)
@@ -206,7 +206,7 @@ mod tests {
 
     #[test]
     fn test_fibonaci() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Box::new(Env::new());
         let program = "
             (
                 (define fib (lambda (n) (if (< n 2) 1 (+ (fib (- n 1)) (fib (- n 2))))))
@@ -220,7 +220,7 @@ mod tests {
 
     #[test]
     fn test_factorial() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Box::new(Env::new());
         let program = "
             (
                 (define fact (lambda (n) (if (< n 1) 1 (* n (fact (- n 1))))))
@@ -234,7 +234,7 @@ mod tests {
 
     #[test]
     fn test_circle_area_function() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Box::new(Env::new());
         let program = "
             (
                 (define pi 314)

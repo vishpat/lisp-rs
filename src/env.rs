@@ -1,7 +1,5 @@
 use crate::object::Object;
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 
 #[derive(Debug, PartialEq, Default)]
 pub struct Env<'a> {
