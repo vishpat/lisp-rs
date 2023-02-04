@@ -8,11 +8,17 @@ pub struct Env<'a> {
 }
 
 impl<'a> Env<'a> {
-
     pub fn new() -> Env<'a> {
         Env {
             vars: HashMap::new(),
             parent: None,
+        }
+    }
+
+    pub fn clone(&self) -> Env<'a> {
+        Env {
+            vars: self.vars.clone(),
+            parent: self.parent,
         }
     }
 

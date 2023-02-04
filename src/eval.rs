@@ -278,8 +278,7 @@ fn eval_reduce(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
 
     for arg in args[1..].iter() {
         let mut new_env = Env::extend(&env);
-        new_env
-            .set(&reduce_param1, accumulator.clone());
+        new_env.set(&reduce_param1, accumulator.clone());
 
         let val = eval_obj(&arg, &mut new_env)?;
         new_env.set(&reduce_param2, val.clone());
@@ -365,7 +364,7 @@ fn eval_obj(obj: &Object, env: &mut Env) -> Result<Object, String> {
                         let func = lamdba.unwrap();
                         match func {
                             Object::Lambda(params, body) => {
-                                let mut new_env = Env::extend(&current_env);
+                                let mut new_env = current_env.clone();
                                 for (i, param) in params.iter().enumerate() {
                                     let val = eval_obj(&list[i + 1], &mut current_env)?;
                                     new_env.set(param, val);
@@ -667,8 +666,7 @@ mod tests {
     }
 
     #[test]
-    fn test_tail_recursion()
-    {
+    fn test_tail_recursion() {
         let mut env = Env::new();
         let program = "
             (
@@ -685,8 +683,7 @@ mod tests {
     }
 
     #[test]
-    fn test_tail_recursive_factorial()
-    {
+    fn test_tail_recursive_factorial() {
         let mut env = Env::new();
         let program = "
             (
@@ -700,12 +697,14 @@ mod tests {
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::List(vec![Object::Integer((3628800) as i64)]));
+        assert_eq!(
+            result,
+            Object::List(vec![Object::Integer((3628800) as i64)])
+        );
     }
 
     #[test]
-    fn test_tail_recursive_fibonnaci()
-    {
+    fn test_tail_recursive_fibonnaci() {
         let mut env = Env::new();
         let program = "
             (
