@@ -1,20 +1,22 @@
 use crate::object::Object;
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
 
 #[derive(Debug, PartialEq, Default)]
-pub struct Env {
-    parent: Option<Rc<RefCell<Env>>>,
+pub struct Env<'a> {
+    parent: Option<&'a Env<'a>>,
     vars: HashMap<String, Object>,
 }
 
-impl Env {
-    pub fn new() -> Self {
-        Default::default()
+impl<'a> Env<'a> {
+
+    pub fn new() -> Env<'a> {
+        Env {
+            vars: HashMap::new(),
+            parent: None,
+        }
     }
 
-    pub fn extend(parent: Rc<RefCell<Self>>) -> Env {
+    pub fn extend(parent: &'a Self) -> Env<'a> {
         Env {
             vars: HashMap::new(),
             parent: Some(parent),
@@ -24,10 +26,7 @@ impl Env {
     pub fn get(&self, name: &str) -> Option<Object> {
         match self.vars.get(name) {
             Some(value) => Some(value.clone()),
-            None => self
-                .parent
-                .as_ref()
-                .and_then(|o| o.borrow().get(name).clone()),
+            None => self.parent.and_then(|parent| parent.get(name)),
         }
     }
 
