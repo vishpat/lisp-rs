@@ -8,7 +8,6 @@ pub struct Env<'a> {
 }
 
 impl<'a> Env<'a> {
-
     pub fn new() -> Env<'a> {
         Env {
             vars: HashMap::new(),

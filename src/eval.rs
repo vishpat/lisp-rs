@@ -173,11 +173,7 @@ fn eval_function_definition(list: &Vec<Object>) -> Result<Object, String> {
     Ok(Object::Lambda(params, body))
 }
 
-fn eval_function_call(
-    s: &str,
-    list: &Vec<Object>,
-    env: &mut Env,
-) -> Result<Object, String> {
+fn eval_function_call(s: &str, list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let lamdba = env.get(s);
     if lamdba.is_none() {
         return Err(format!("Unbound function: {}", s));
@@ -186,12 +182,12 @@ fn eval_function_call(
     let func = lamdba.unwrap();
     match func {
         Object::Lambda(params, body) => {
-            let mut new_env = Env::extend(env);
+            let mut new_env = Box::new(Env::extend(env));
             for (i, param) in params.iter().enumerate() {
-                let val = eval_obj(&list[i + 1], &mut new_env)?;
+                let val = eval_obj(&list[i + 1], &mut *new_env)?;
                 new_env.set(param, val);
             }
-            return eval_obj(&Object::List(body), &mut new_env);
+            return eval_obj(&Object::List(body), &mut *new_env);
         }
         _ => return Err(format!("Not a lambda: {}", s)),
     }
@@ -242,10 +238,10 @@ fn eval_map(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let mut result_list = Vec::new();
     for arg in args.iter() {
         let val = eval_obj(&arg, env)?;
-        let mut new_env = Env::extend(env);
+        let mut new_env = Box::new(Env::extend(env));
         new_env.set(&func_param, val);
         let new_body = body.clone();
-        let result = eval_obj(&Object::List(new_body), &mut new_env)?;
+        let result = eval_obj(&Object::List(new_body), &mut *new_env)?;
         result_list.push(result);
     }
     Ok(Object::ListData(result_list))
@@ -281,10 +277,10 @@ fn eval_filter(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let mut result_list = Vec::new();
     for arg in args.iter() {
         let val = eval_obj(&arg, env)?;
-        let mut new_env = Env::extend(env);
+        let mut new_env = Box::new(Env::extend(env));
         new_env.set(&func_param, val.clone());
         let new_body = body.clone();
-        let result_obj = eval_obj(&Object::List(new_body), &mut new_env)?;
+        let result_obj = eval_obj(&Object::List(new_body), &mut *new_env)?;
         let result = match result_obj {
             Object::Bool(b) => b,
             _ => return Err(format!("Invalid filter result: {}", result_obj)),
@@ -334,14 +330,14 @@ fn eval_reduce(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let mut accumulator = eval_obj(&args[0], env)?;
 
     for arg in args[1..].iter() {
-        let mut new_env = Env::extend(env);
+        let mut new_env = Box::new(Env::extend(env));
         new_env.set(&reduce_param1, accumulator.clone());
 
         let val = eval_obj(&arg, &mut new_env)?;
         new_env.set(&reduce_param2, val.clone());
 
         let new_body = body.clone();
-        accumulator = eval_obj(&Object::List(new_body), &mut new_env)?;
+        accumulator = eval_obj(&Object::List(new_body), &mut *new_env)?;
     }
     Ok(accumulator)
 }
