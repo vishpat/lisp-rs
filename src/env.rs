@@ -14,7 +14,7 @@ impl<'a> Env<'a> {
     pub fn new() -> Env<'a> {
         Env {
             vars: HashMap::new(),
-            parent: Some(&Env::default()),
+            parent: None,
         }
     }
 
