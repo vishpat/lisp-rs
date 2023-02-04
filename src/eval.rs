@@ -324,6 +324,7 @@ fn eval_keyword(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
 }
 
 fn eval_obj(obj: &Object, env: &mut Env) -> Result<Object, String> {
+    println!("Evaluating: with environment {:?}" , env);
     let mut current_obj = Box::new(obj.clone());
     let mut current_env = env;
     loop {
@@ -622,13 +623,20 @@ mod tests {
         let mut env = Env::new();
         let program = "
             (
-                (define fib (lambda (n) (if (< n 2) 1 (+ (fib (- n 1)) (fib (- n 2))))))
-                (fib 10)
+                (define fib 
+                    (lambda (n) 
+                        (if (< n 3) 
+                            1
+                            (+ (fib (- n 1)) (fib (- n 2)))
+                        )
+                    )
+                )
+                (fib 5)
             )
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::List(vec![Object::Integer((89) as i64)]));
+        assert_eq!(result, Object::List(vec![Object::Integer((5) as i64)]));
     }
 
     #[test]
@@ -636,13 +644,20 @@ mod tests {
         let mut env = Env::new();
         let program = "
             (
-                (define fact (lambda (n) (if (< n 1) 1 (* n (fact (- n 1))))))
-                (fact 5)
+                (define fact 
+                    (lambda (n) 
+                        (if (< n 1) 
+                            1 
+                            (* n (fact (- n 1)))
+                        )
+                    )
+                )
+                (fact 6)
             )
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::List(vec![Object::Integer((120) as i64)]));
+        assert_eq!(result, Object::List(vec![Object::Integer((720) as i64)]));
     }
 
     #[test]
