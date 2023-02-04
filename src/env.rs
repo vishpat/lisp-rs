@@ -8,18 +8,18 @@ pub struct Env<'a> {
 }
 
 impl<'a> Env<'a> {
-    pub fn new() -> Env<'a> {
-        Env {
+    pub fn new() -> Box<Env<'a>> {
+        Box::new(Env {
             vars: HashMap::new(),
             parent: None,
-        }
+        })
     }
 
-    pub fn extend(parent: &'a Self) -> Env<'a> {
-        Env {
+    pub fn extend(parent: &'a Self) -> Box<Env<'a>> {
+        Box::new(Env {
             vars: HashMap::new(),
             parent: Some(parent),
-        }
+        })
     }
 
     pub fn get(&self, name: &str) -> Option<Object> {

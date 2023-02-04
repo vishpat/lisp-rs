@@ -10,7 +10,7 @@ const PROMPT: &str = "lisp-rs> ";
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let reader = Interface::new(PROMPT).unwrap();
-    let mut env = Box::new(env::Env::new());
+    let mut env = env::Env::new();
 
     reader.set_prompt(format!("{}", PROMPT).as_ref()).unwrap();
 
