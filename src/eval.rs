@@ -333,10 +333,10 @@ fn eval_obj(obj: &Object, env: &mut Env) -> Result<Object, String> {
                 let head = &list[0];
                 match head {
                     Object::BinaryOp(_op) => {
-                        return eval_binary_op(&list, current_env);
+                        return eval_binary_op(&list, &mut current_env);
                     }
                     Object::Keyword(_keyword) => {
-                        return eval_keyword(&list, current_env);
+                        return eval_keyword(&list, &mut current_env);
                     }
                     Object::If => {
                         if list.len() != 4 {
@@ -365,7 +365,7 @@ fn eval_obj(obj: &Object, env: &mut Env) -> Result<Object, String> {
                         let func = lamdba.unwrap();
                         match func {
                             Object::Lambda(params, body) => {
-                                let new_env = Env::extend(&current_env);
+                                let mut new_env = Env::extend(&current_env);
                                 for (i, param) in params.iter().enumerate() {
                                     let val = eval_obj(&list[i + 1], &mut current_env)?;
                                     new_env.set(param, val);
