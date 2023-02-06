@@ -289,6 +289,16 @@ fn eval_reduce(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     Ok(accumulator)
 }
 
+fn eval_begin(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
+    let mut result = Object::Void;
+    let mut new_env = Env::extend(env);
+
+    for obj in list[1..].iter() {
+        result = eval_obj(obj, &mut new_env)?;
+    }
+    Ok(result)
+}
+
 fn eval_symbol(s: &str, env: &mut Env) -> Result<Object, String> {
     let val = match s {
         "#t" => return Ok(Object::Bool(true)),
@@ -309,6 +319,7 @@ fn eval_keyword(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     match head {
         Object::Keyword(s) => match s.as_str() {
             "define" => return eval_define(&list, env),
+            "begin" => return eval_begin(&list, env),
             "list" => return eval_list_data(&list, env),
             "print" => return print_list(&list, env),
             "lambda" => return eval_function_definition(&list),
@@ -324,7 +335,7 @@ fn eval_keyword(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
 }
 
 fn eval_obj(obj: &Object, env: &mut Env) -> Result<Object, String> {
-    println!("Evaluating: with environment {:?}" , env);
+    println!("Evaluating: with environment {:?}", env);
     let mut current_obj = Box::new(obj.clone());
     let mut current_env = env;
     loop {
@@ -624,19 +635,22 @@ mod tests {
         let program = "
             (
                 (define fib 
-                    (lambda (n) 
-                        (if (< n 3) 
-                            1
-                            (+ (fib (- n 1)) (fib (- n 2)))
+                    (lambda (n)
+                        (begin 
+                            (define n1 n) 
+                            (if (< n1 3) 
+                                1
+                                (+ (fib (- n1 1)) (fib (- n1 2)))
+                            )
                         )
                     )
                 )
-                (fib 5)
+                (fib 10)
             )
         ";
 
         let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::List(vec![Object::Integer((5) as i64)]));
+        assert_eq!(result, Object::List(vec![Object::Integer((55) as i64)]));
     }
 
     #[test]

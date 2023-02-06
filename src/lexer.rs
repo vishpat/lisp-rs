@@ -101,9 +101,8 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
                 }
 
                 let token = match word.as_str() {
-                    "define" | "list" | "print" | "lambda" | "map" | "filter" | "reduce" => {
-                        Token::Keyword(word)
-                    }
+                    "define" | "list" | "print" | "lambda" | "map" | "filter" | "reduce"
+                    | "begin" => Token::Keyword(word),
                     "if" => Token::If,
                     "+" | "-" | "*" | "/" | "%" | "<" | ">" | "=" | "!=" | "&" | "|" => {
                         Token::BinaryOp(word)
