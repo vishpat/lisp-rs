@@ -1,11 +1,10 @@
 use crate::env::*;
 use crate::object::*;
 use crate::parser::*;
-use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::rc::Rc;
 
-fn print_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn print_list(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let mut new_list = Vec::new();
 
     for obj in list[1..].iter() {
@@ -18,7 +17,7 @@ fn print_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, 
     Ok(Object::Void)
 }
 
-fn eval_car(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_car(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let l = eval_obj(&list[1], env)?;
     match l {
         Object::ListData(list) => Ok(list[0].clone()),
@@ -26,7 +25,7 @@ fn eval_car(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
     }
 }
 
-fn eval_cdr(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_cdr(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let l = eval_obj(&list[1], env)?;
     let mut new_list = vec![];
     match l {
@@ -40,7 +39,7 @@ fn eval_cdr(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
     }
 }
 
-fn eval_length(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_length(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let obj = eval_obj(&list[1], env)?;
     match obj {
         Object::List(list) => Ok(Object::Integer(list.len() as i64)),
@@ -49,7 +48,7 @@ fn eval_length(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     }
 }
 
-fn eval_is_null(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_is_null(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let obj = eval_obj(&list[1], env)?;
     match obj {
         Object::List(list) => Ok(Object::Bool(list.len() == 0)),
@@ -58,7 +57,7 @@ fn eval_is_null(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object
     }
 }
 
-fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_binary_op(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for infix operator"));
     }
@@ -152,9 +151,9 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
     }
 }
 
-fn eval_begin(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_begin(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let mut result = Object::Void;
-    let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
+    let mut new_env = Env::extend(env);
 
     for obj in list[1..].iter() {
         result = eval_obj(obj, &mut new_env)?;
@@ -162,9 +161,9 @@ fn eval_begin(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, 
     Ok(result)
 }
 
-fn eval_let(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_let(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let mut result = Object::Void;
-    let bindings_env = Rc::new(RefCell::new(Env::new()));
+    let mut bindings_env = Env::new();
 
     if list.len() < 3 {
         return Err(format!("Invalid number of arguments for let"));
@@ -191,12 +190,12 @@ fn eval_let(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
         };
 
         let value = eval_obj(&binding[1], env)?;
-        bindings_env.borrow_mut().set(name.as_str(), value);
+        bindings_env.set(name.as_str(), value);
     }
 
     println!("let arguments {:?}", bindings_env);
-    let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
-    new_env.borrow_mut().update(bindings_env);
+    let mut new_env = Env::extend(env);
+    new_env.update(&bindings_env);
 
     for obj in list[2..].iter() {
         result = eval_obj(obj, &mut new_env)?;
@@ -204,7 +203,7 @@ fn eval_let(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
     Ok(result)
 }
 
-fn eval_define(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_define(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for define"));
     }
@@ -218,18 +217,18 @@ fn eval_define(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
             };
             let params = Object::List(Rc::new(l[1..].to_vec()));
             let body = list[2].clone();
-            let lambda = eval_function_definition(&vec![Object::Void, params, body], env)?;
-            env.borrow_mut().set(&name, lambda);
+            let lambda = eval_function_definition(&vec![Object::Void, params, body])?;
+            env.set(&name, lambda);
             return Ok(Object::Void);
         }
         _ => return Err(format!("Invalid define")),
     };
     let val = eval_obj(&list[2], env)?;
-    env.borrow_mut().set(&sym, val);
+    env.set(&sym, val);
     Ok(Object::Void)
 }
 
-fn eval_list_data(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_list_data(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let mut new_list = Vec::new();
 
     for obj in list[1..].iter() {
@@ -238,7 +237,7 @@ fn eval_list_data(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
     Ok(Object::ListData(new_list))
 }
 
-fn eval_range(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_range(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.len() != 3 && list.len() != 4 {
         return Err(format!("Invalid number of arguments for range"));
     }
@@ -274,8 +273,7 @@ fn eval_range(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, 
 }
 
 fn eval_function_definition(
-    list: &Vec<Object>,
-    env: &mut Rc<RefCell<Env>>,
+    list: &Vec<Object>
 ) -> Result<Object, String> {
     let params = match &list[1] {
         Object::List(list) => {
@@ -295,10 +293,10 @@ fn eval_function_definition(
         Object::List(list) => list.clone(),
         _ => return Err(format!("Invalid lambda")),
     };
-    Ok(Object::Lambda(params, Rc::new(body.to_vec()), env.clone()))
+    Ok(Object::Lambda(params, Rc::new(body.to_vec())))
 }
 
-fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_map(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for map {:?}", list));
     }
@@ -306,15 +304,15 @@ fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
     let lambda = eval_obj(&list[1], env)?;
     let arg_list = eval_obj(&list[2], env)?;
 
-    let (params, body, func_env) = match lambda {
-        Object::Lambda(p, b, e) => {
+    let (params, body) = match lambda {
+        Object::Lambda(p, b ) => {
             if p.len() != 1 {
                 return Err(format!(
                     "Invalid number of parameters for map lambda function {:?}",
                     p
                 ));
             }
-            (p, b, e)
+            (p, b)
         }
         _ => return Err(format!("Not a lambda while evaluating map: {}", lambda)),
     };
@@ -328,8 +326,8 @@ fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
     let mut result_list = Vec::new();
     for arg in args.iter() {
         let val = eval_obj(&arg, env)?;
-        let mut new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
-        new_env.borrow_mut().set(&func_param, val);
+        let mut new_env = Env::extend(env);
+        new_env.set(&func_param, val);
         let new_body = body.clone();
         let result = eval_obj(&Object::List(new_body), &mut new_env)?;
         result_list.push(result);
@@ -337,7 +335,7 @@ fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
     Ok(Object::ListData(result_list))
 }
 
-fn eval_filter(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_filter(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for filter {:?}", list));
     }
@@ -345,15 +343,15 @@ fn eval_filter(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     let lambda = eval_obj(&list[1], env)?;
     let arg_list = eval_obj(&list[2], env)?;
 
-    let (params, body, func_env) = match lambda {
-        Object::Lambda(p, b, e) => {
+    let (params, body) = match lambda {
+        Object::Lambda(p, b ) => {
             if p.len() != 1 {
                 return Err(format!(
                     "Invalid number of parameters for map function {:?}",
                     p
                 ));
             }
-            (p, b, e)
+            (p, b)
         }
         _ => return Err(format!("Not a lambda while evaluating map: {}", lambda)),
     };
@@ -367,8 +365,8 @@ fn eval_filter(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     let mut result_list = Vec::new();
     for arg in args.iter() {
         let val = eval_obj(&arg, env)?;
-        let mut new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
-        new_env.borrow_mut().set(&func_param, val.clone());
+        let mut new_env = Env::extend(env);
+        new_env.set(&func_param, val.clone());
         let new_body = body.clone();
         let result_obj = eval_obj(&Object::List(new_body), &mut new_env)?;
         let result = match result_obj {
@@ -382,7 +380,7 @@ fn eval_filter(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     Ok(Object::ListData(result_list))
 }
 
-fn eval_reduce(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_reduce(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for reduce {:?}", list));
     }
@@ -390,15 +388,15 @@ fn eval_reduce(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     let lambda = eval_obj(&list[1], env)?;
     let arg_list = eval_obj(&list[2], env)?;
 
-    let (params, body, func_env) = match lambda {
-        Object::Lambda(p, b, e) => {
+    let (params, body) = match lambda {
+        Object::Lambda(p, b ) => {
             if p.len() != 2 {
                 return Err(format!(
                     "Invalid number of parameters for reduce function {:?}",
                     p
                 ));
             }
-            (p, b, e)
+            (p, b)
         }
         _ => return Err(format!("Not a lambda while evaluating map: {}", lambda)),
     };
@@ -420,13 +418,13 @@ fn eval_reduce(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     let mut accumulator = eval_obj(&args[0], env)?;
 
     for arg in args[1..].iter() {
-        let mut new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
+        let mut new_env = Env::extend(env);
         new_env
-            .borrow_mut()
+            
             .set(&reduce_param1, accumulator.clone());
 
-        let val = eval_obj(&arg, env)?;
-        new_env.borrow_mut().set(&reduce_param2, val.clone());
+        let val = eval_obj(&arg, &mut new_env)?;
+        new_env.set(&reduce_param2, val.clone());
 
         let new_body = body.clone();
         accumulator = eval_obj(&Object::List(new_body), &mut new_env)?;
@@ -434,12 +432,12 @@ fn eval_reduce(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     Ok(accumulator)
 }
 
-fn eval_symbol(s: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_symbol(s: &str, env: &mut Env) -> Result<Object, String> {
     let val = match s {
         "#t" => return Ok(Object::Bool(true)),
         "#f" => return Ok(Object::Bool(false)),
         "#nil" => return Ok(Object::Void),
-        _ => env.borrow_mut().get(s),
+        _ => env.get(s),
     };
 
     if val.is_none() {
@@ -449,7 +447,7 @@ fn eval_symbol(s: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     Ok(val.unwrap().clone())
 }
 
-fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_keyword(list: &Vec<Object>, env: &mut Env) -> Result<Object, String> {
     let head = &list[0];
     match head {
         Object::Keyword(s) => match s.as_str() {
@@ -458,7 +456,7 @@ fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object
             "let" => return eval_let(&list, env),
             "list" => return eval_list_data(&list, env),
             "print" => return print_list(&list, env),
-            "lambda" => return eval_function_definition(&list, env),
+            "lambda" => return eval_function_definition(&list),
             "map" => return eval_map(&list, env),
             "filter" => return eval_filter(&list, env),
             "reduce" => return eval_reduce(&list, env),
@@ -475,9 +473,9 @@ fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object
     }
 }
 
-fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_obj(obj: &Object, env: &mut Env) -> Result<Object, String> {
     let mut current_obj = Box::new(obj.clone());
-    let mut current_env = env.clone();
+    let mut current_env = env;
     loop {
         match *current_obj {
             Object::List(list) => {
@@ -507,32 +505,22 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                         }
                         continue;
                     }
-                    Object::Lambda(params, body, func_env) => {
-                        let new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
-                        for (i, param) in params.iter().enumerate() {
-                            let val = eval_obj(&list[i + 1], &mut current_env)?;
-                            new_env.borrow_mut().set(param, val);
-                        }
-                        current_obj = Box::new(Object::List(body.clone()));
-                        current_env = new_env;
-                        continue;
-                    }
                     Object::Symbol(s) => {
-                        let lamdba = current_env.borrow_mut().get(s);
+                        let lamdba = current_env.get(s);
                         if lamdba.is_none() {
                             return Err(format!("Unbound function: {}", s));
                         }
 
                         let func = lamdba.unwrap();
                         match func {
-                            Object::Lambda(params, body, func_env) => {
-                                let new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
+                            Object::Lambda(params, body ) => {
+                                let mut new_env = current_env.clone();
                                 for (i, param) in params.iter().enumerate() {
-                                    let val = eval_obj(&list[i + 1], &mut current_env)?;
-                                    new_env.borrow_mut().set(param, val);
+                                    let val = eval_obj(&list[i + 1], &mut new_env)?;
+                                    new_env.set(param, val);
                                 }
                                 current_obj = Box::new(Object::List(body));
-                                current_env = new_env.clone();
+                                *current_env = new_env;
                                 continue;
                             }
                             _ => return Err(format!("Not a lambda: {} {:?}", s, func)),
@@ -549,7 +537,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                         }
                         let head = &new_list[0];
                         match head {
-                            Object::Lambda(_, _, _) => {
+                            Object::Lambda(_, _) => {
                                 return eval_obj(
                                     &Object::List(Rc::new(new_list)),
                                     &mut current_env,
@@ -566,7 +554,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                 return eval_symbol(&s, &mut current_env);
             }
             Object::Void => return Ok(Object::Void),
-            Object::Lambda(_params, _body, _func_env) => return Ok(Object::Void),
+            Object::Lambda(_params, _body ) => return Ok(Object::Void),
             Object::Bool(_) => return Ok(obj.clone()),
             Object::Integer(n) => return Ok(Object::Integer(n)),
             Object::Float(n) => return Ok(Object::Float(n)),
@@ -577,7 +565,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
     }
 }
 
-pub fn eval(program: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+pub fn eval(program: &str, env: &mut Env) -> Result<Object, String> {
     let parsed_list = parse(program);
     if parsed_list.is_err() {
         return Err(format!("{}", parsed_list.err().unwrap()));
@@ -591,63 +579,63 @@ mod tests {
 
     #[test]
     fn test_simple_add() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let result = eval("(+ 1 2)", &mut env).unwrap();
         assert_eq!(result, Object::Integer(3));
     }
 
     #[test]
     fn test_simple_sub() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let result = eval("(- 1.0 2)", &mut env).unwrap();
         assert_eq!(result, Object::Float(-1.0));
     }
 
     #[test]
     fn test_str_add() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let result = eval("(+ \"Raleigh\" \"Durham\")", &mut env).unwrap();
         assert_eq!(result, Object::String("RaleighDurham".to_string()));
     }
 
     #[test]
     fn test_str_eq_false() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let result = eval("(= \"Raleigh\" \"Durham\")", &mut env).unwrap();
         assert_eq!(result, Object::Bool(false));
     }
 
     #[test]
     fn test_str_eq_true() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let result = eval("(= \"Raleigh\" \"Raleigh\")", &mut env).unwrap();
         assert_eq!(result, Object::Bool(true));
     }
 
     #[test]
     fn test_greater_than_str() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let result = eval("(> \"Raleigh\" \"Durham\")", &mut env).unwrap();
         assert_eq!(result, Object::Bool(true));
     }
 
     #[test]
     fn test_less_than_str() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let result = eval("(< \"abcd\" \"abef\")", &mut env).unwrap();
         assert_eq!(result, Object::Bool(true));
     }
 
     #[test]
     fn test_str_with_spaces() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let result = eval("(+ \"Raleigh \" \"Durham\")", &mut env).unwrap();
         assert_eq!(result, Object::String("Raleigh Durham".to_string()));
     }
 
     #[test]
     fn test_str_with_spaces_2() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
         (
             (define fruits \"apples mangoes bananas \")
@@ -666,28 +654,28 @@ mod tests {
 
     #[test]
     fn test_greater_than_int() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let result = eval("(> 10 20)", &mut env).unwrap();
         assert_eq!(result, Object::Bool(false));
     }
 
     #[test]
     fn test_less_than_int() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let result = eval("(< 21.0 20.0)", &mut env).unwrap();
         assert_eq!(result, Object::Bool(false));
     }
 
     #[test]
     fn test_modulo() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let result = eval("(% 21.0 20.0)", &mut env).unwrap();
         assert_eq!(result, Object::Float(1.0));
     }
 
     #[test]
     fn test_area_of_a_circle_float() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define r 5.0)
@@ -700,7 +688,7 @@ mod tests {
 
     #[test]
     fn test_range_no_stride() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "(range 0 11)";
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
@@ -723,7 +711,7 @@ mod tests {
 
     #[test]
     fn test_range_with_stride() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "(range 0 10 3)";
         let result = eval(program, &mut env).unwrap();
         assert_eq!(
@@ -739,7 +727,7 @@ mod tests {
 
     #[test]
     fn test_area_of_a_circle() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define r 10)
@@ -752,7 +740,7 @@ mod tests {
 
     #[test]
     fn test_sqr_function() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define sqr (lambda (r) (* r r))) 
@@ -764,7 +752,7 @@ mod tests {
 
     #[test]
     fn test_map() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define sqr (lambda (r) (* r r)))
@@ -788,7 +776,7 @@ mod tests {
 
     #[test]
     fn test_filter() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define odd (lambda (v) (= 1 (% v 2))))
@@ -810,7 +798,7 @@ mod tests {
 
     #[test]
     fn test_reduce() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define odd (lambda (v) (= 1 (% v 2))))
@@ -825,7 +813,7 @@ mod tests {
 
     #[test]
     fn test_fibonaci() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define fib (lambda (n) 
@@ -842,7 +830,7 @@ mod tests {
 
     #[test]
     fn test_factorial() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define fact (lambda (n) (if (< n 1) 1 (* n (fact (- n 1))))))
@@ -856,7 +844,7 @@ mod tests {
 
     #[test]
     fn test_abs() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define (abs n) (if (< n 0) (* -1 n) n))
@@ -870,7 +858,7 @@ mod tests {
 
     #[test]
     fn test_circle_area_no_lambda() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define pi 314)
@@ -887,7 +875,7 @@ mod tests {
 
     #[test]
     fn test_circle_area_function() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define pi 314)
@@ -904,7 +892,7 @@ mod tests {
 
     #[test]
     fn test_tail_recursion() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define sum-n 
@@ -921,7 +909,7 @@ mod tests {
 
     #[test]
     fn test_tail_recursive_factorial() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define fact 
@@ -939,7 +927,7 @@ mod tests {
 
     #[test]
     fn test_closure1() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define add-n 
@@ -956,7 +944,7 @@ mod tests {
 
     #[test]
     fn test_tail_recursive_fibonnaci() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (begin
                 (define fib
@@ -975,7 +963,7 @@ mod tests {
 
     #[test]
     fn test_inline_lambda() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
         (begin
             ((lambda (x y) (+ x y)) 10 20)
@@ -988,7 +976,7 @@ mod tests {
 
     #[test]
     fn test_car() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
         (begin
             (car (list 1 2 3))
@@ -1001,7 +989,7 @@ mod tests {
 
     #[test]
     fn test_cdr() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
         (begin
             (cdr (list 1 2 3))
@@ -1017,7 +1005,7 @@ mod tests {
 
     #[test]
     fn test_length() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
         (begin
             (length (list 1 2 3))
@@ -1030,7 +1018,7 @@ mod tests {
 
     #[test]
     fn test_sum_list_of_integers() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
         (begin
             (define sum-list 
@@ -1047,7 +1035,7 @@ mod tests {
 
     #[test]
     fn test_function_application() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
         (begin
             (define (double value) 
@@ -1065,7 +1053,7 @@ mod tests {
 
     #[test]
     fn test_begin_scope_test() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
         (begin
             (define a 10)
@@ -1093,7 +1081,7 @@ mod tests {
 
     #[test]
     fn test_begin_scope_test_2() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
         (begin 
             (define x 10)
@@ -1111,7 +1099,7 @@ mod tests {
 
     #[test]
     fn test_let_1() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
         (begin
             (let ((a 10) (b 20))
@@ -1129,7 +1117,7 @@ mod tests {
 
     #[test]
     fn test_let_2() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
         (begin
             (define a 100)
@@ -1146,7 +1134,7 @@ mod tests {
 
     #[test]
     fn test_let_3() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
+        let mut env = Env::new();
         let program = "
             (let ((x 2) (y 3))
                 (let ((x 7)

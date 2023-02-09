@@ -5,18 +5,16 @@ mod object;
 mod parser;
 
 use object::Object;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 pub fn lisp_rs_eval(input: &str) -> String {
-    let mut env = Rc::new(RefCell::new(env::Env::new()));
+    let mut env = env::Env::new();
     let val = eval::eval(input, &mut env);
     match val {
         Ok(Object::Void) => "".to_string().into(),
         Ok(Object::Integer(n)) => n.to_string().into(),
         Ok(Object::Bool(b)) => b.to_string().into(),
         Ok(Object::Symbol(s)) => s.to_string().into(),
-        Ok(Object::Lambda(params, body, _)) => {
+        Ok(Object::Lambda(params, body)) => {
             let mut res = "Lambda(".to_string();
             for param in params {
                 res.push_str(&format!("{} ", param));
