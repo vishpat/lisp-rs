@@ -39,15 +39,13 @@ fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
     }
 
     let mut list: Vec<Object> = Vec::new();
-    while !tokens.is_empty() {
-        let token = tokens.pop();
-        if token == None {
+    loop {
+        let Some(token) = tokens.pop() else {
             return Err(ParseError {
-                err: format!("Did not find enough tokens"),
+                err: format!("Expected RParen or next list element, but ran out of tokens!"),
             });
-        }
-        let t = token.unwrap();
-        match t {
+        };
+        match token {
             Token::Keyword(k) => list.push(Object::Keyword(k)),
             Token::If => list.push(Object::If),
             Token::BinaryOp(b) => list.push(Object::BinaryOp(b)),
@@ -65,13 +63,17 @@ fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
             }
         }
     }
-
-    Ok(Object::List(Rc::new(list)))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn incomplete_list() {
+        parse_list(&mut vec![Token::LParen, Token::Integer(5)])
+            .expect_err("List is missing RParen");
+    }
 
     #[test]
     fn test_add() {
