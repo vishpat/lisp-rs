@@ -324,9 +324,9 @@ fn eval_map(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, Strin
     let func_param = &params[0];
     let mut result_list = Vec::new();
     for arg in args.iter() {
-        let val = eval_obj(&arg, env)?;
+        let val = eval_obj(arg, env)?;
         let mut new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
-        new_env.borrow_mut().set(&func_param, val);
+        new_env.borrow_mut().set(func_param, val);
         let new_body = body.clone();
         let result = eval_obj(&Object::List(new_body), &mut new_env)?;
         result_list.push(result);
@@ -363,7 +363,7 @@ fn eval_filter(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, St
     let func_param = &params[0];
     let mut result_list = Vec::new();
     for arg in args.iter() {
-        let val = eval_obj(&arg, env)?;
+        let val = eval_obj(arg, env)?;
         let mut new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
         new_env.borrow_mut().set(&func_param, val.clone());
         let new_body = body.clone();
@@ -418,12 +418,10 @@ fn eval_reduce(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, St
 
     for arg in args[1..].iter() {
         let mut new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
-        new_env
-            .borrow_mut()
-            .set(&reduce_param1, accumulator.clone());
+        new_env.borrow_mut().set(reduce_param1, accumulator.clone());
 
-        let val = eval_obj(&arg, env)?;
-        new_env.borrow_mut().set(&reduce_param2, val.clone());
+        let val = eval_obj(arg, env)?;
+        new_env.borrow_mut().set(reduce_param2, val.clone());
 
         let new_body = body.clone();
         accumulator = eval_obj(&Object::List(new_body), &mut new_env)?;
@@ -450,21 +448,21 @@ fn eval_keyword(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, S
     let head = &list[0];
     match head {
         Object::Keyword(s) => match s.as_str() {
-            "define" => return eval_define(&list, env),
-            "begin" => return eval_begin(&list, env),
-            "let" => return eval_let(&list, env),
-            "list" => return eval_list_data(&list, env),
-            "print" => return print_list(&list, env),
-            "lambda" => return eval_function_definition(&list, env),
-            "map" => return eval_map(&list, env),
-            "filter" => return eval_filter(&list, env),
-            "reduce" => return eval_reduce(&list, env),
-            "range" => return eval_range(&list, env),
-            "car" => return eval_car(&list, env),
-            "cdr" => return eval_cdr(&list, env),
-            "length" => return eval_length(&list, env),
-            "null?" => return eval_is_null(&list, env),
-            _ => return Err(format!("Unknown keyword: {}", s)),
+            "define" => eval_define(&list, env),
+            "begin" => eval_begin(&list, env),
+            "let" => eval_let(&list, env),
+            "list" => eval_list_data(&list, env),
+            "print" => print_list(&list, env),
+            "lambda" => eval_function_definition(&list, env),
+            "map" => eval_map(&list, env),
+            "filter" => eval_filter(&list, env),
+            "reduce" => eval_reduce(&list, env),
+            "range" => eval_range(&list, env),
+            "car" => eval_car(&list, env),
+            "cdr" => eval_cdr(&list, env),
+            "length" => eval_length(&list, env),
+            "null?" => eval_is_null(&list, env),
+            _ => Err(format!("Unknown keyword: {}", s)),
         },
         _ => {
             return Err(format!("Invalid keyword: {}", head));
