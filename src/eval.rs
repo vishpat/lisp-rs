@@ -167,27 +167,27 @@ fn eval_let(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, Strin
     let bindings_env = Rc::new(RefCell::new(Env::new()));
 
     if list.len() < 3 {
-        return Err(format!("Invalid number of arguments for let"));
+        return Err("Invalid number of arguments for let".to_string());
     }
 
     let bindings = match list[1].clone() {
         Object::List(bindings) => bindings,
-        _ => return Err(format!("Invalid bindings for let")),
+        _ => return Err("Invalid bindings for let".to_string()),
     };
 
     for binding in bindings.iter() {
         let binding = match binding {
             Object::List(binding) => binding,
-            _ => return Err(format!("Invalid binding for let")),
+            _ => return Err("Invalid binding for let".to_string()),
         };
 
         if binding.len() != 2 {
-            return Err(format!("Invalid binding for let"));
+            return Err("Invalid binding for let".to_string());
         }
 
         let name = match binding[0].clone() {
             Object::Symbol(name) => name,
-            _ => return Err(format!("Invalid binding for let")),
+            _ => return Err("Invalid binding for let".to_string()),
         };
 
         let value = eval_obj(&binding[1], env)?;
@@ -206,7 +206,7 @@ fn eval_let(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, Strin
 
 fn eval_define(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
-        return Err(format!("Invalid number of arguments for define"));
+        return Err("Invalid number of arguments for define".to_string());
     }
 
     let sym = match &list[1] {
@@ -214,7 +214,7 @@ fn eval_define(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, St
         Object::List(l) => {
             let name = match &l[0] {
                 Object::Symbol(s) => s.clone(),
-                _ => return Err(format!("Invalid symbol for define")),
+                _ => return Err("Invalid symbol for define".to_string()),
             };
             let params = Object::List(Rc::new(l[1..].to_vec()));
             let body = list[2].clone();
@@ -222,7 +222,7 @@ fn eval_define(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, St
             env.borrow_mut().set(&name, lambda);
             return Ok(Object::Void);
         }
-        _ => return Err(format!("Invalid define")),
+        _ => return Err("Invalid define".to_string()),
     };
     let val = eval_obj(&list[2], env)?;
     env.borrow_mut().set(&sym, val);
@@ -240,7 +240,7 @@ fn eval_list_data(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object,
 
 fn eval_range(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 && list.len() != 4 {
-        return Err(format!("Invalid number of arguments for range"));
+        return Err("Invalid number of arguments for range".to_string());
     }
 
     let start = eval_obj(&list[1], env)?;
@@ -250,17 +250,17 @@ fn eval_range(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, Str
         let stride_obj = eval_obj(&list[3], env)?;
         stride = match stride_obj {
             Object::Integer(i) => i,
-            _ => return Err(format!("Invalid stride for range")),
+            _ => return Err("Invalid stride for range".to_string()),
         };
     }
 
     let start = match start {
         Object::Integer(i) => i,
-        _ => return Err(format!("Invalid start for range")),
+        _ => return Err("Invalid start for range".to_string()),
     };
     let end = match end {
         Object::Integer(i) => i,
-        _ => return Err(format!("Invalid end for range")),
+        _ => return Err("Invalid end for range".to_string()),
     };
 
     let mut new_list = Vec::new();
@@ -285,12 +285,12 @@ fn eval_function_definition(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Resu
             }
             params
         }
-        _ => return Err(format!("Invalid lambda")),
+        _ => return Err("Invalid lambda".to_string()),
     };
 
     let body = match &list[2] {
         Object::List(list) => list.clone(),
-        _ => return Err(format!("Invalid lambda")),
+        _ => return Err("Invalid lambda".to_string()),
     };
     Ok(Object::Lambda(params, Rc::new(body.to_vec()), env.clone()))
 }
