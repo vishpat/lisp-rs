@@ -31,12 +31,12 @@ impl fmt::Display for TokenError {
 pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
     let keywords: HashSet<&str> = vec![
         "define", "list", "print", "lambda", "map", "filter", "reduce", "range", "car", "cdr",
-        "length", "null?", "begin", "let", "if", "or", "and",
+        "length", "null?", "begin", "let", "if",
     ]
     .into_iter()
     .collect::<HashSet<&str>>();
 
-    let binary_ops: HashSet<&str> = vec!["+", "-", "*", "/", "%", "<", ">", "=", "!=", "or", "and"]
+    let binary_ops: HashSet<&str> = vec!["+", "-", "*", "/", "%", "<", ">", "=", "!="]
         .into_iter()
         .collect::<HashSet<&str>>();
 
@@ -87,7 +87,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
                         Token::Float(f)
                     } else if word == "if" {
                         Token::If
-                    } else if binary_ops.contains(word.as_str()) {
+                    } else if binary_ops.contains(word.as_str()) || word == "or" || word == "and" {
                         Token::BinaryOp(word)
                     } else if keywords.contains(word.as_str()) {
                         Token::Keyword(word)
