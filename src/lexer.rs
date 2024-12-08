@@ -13,7 +13,6 @@ pub enum Token {
     String(String),
     BinaryOp(String),
     Keyword(String),
-    If,
 }
 
 #[derive(Debug)]
@@ -135,9 +134,7 @@ impl<'a> Tokenizer<'a> {
             }
             c if c.is_alphabetic() || self.binary_ops.contains(&c) => {
                 let sym = self.read_symbol();
-                if sym == "if" {
-                    Some(Token::If)
-                } else if self.keywords.contains(sym.as_str()) {
+                if self.keywords.contains(sym.as_str()) {
                     Some(Token::Keyword(sym))
                 } else if self.binary_ops.contains(&sym.chars().next().unwrap()) {
                     Some(Token::BinaryOp(sym))

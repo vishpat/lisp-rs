@@ -53,7 +53,6 @@ pub fn lisp_rs_eval(input: &str) -> String {
         Ok(Object::Keyword(s)) => s.to_string(),
         Ok(Object::BinaryOp(s)) => s.to_string(),
         Ok(Object::Float(n)) => n.to_string(),
-        Ok(Object::If) => "If".to_string(),
         Err(e) => e.to_string(),
     }
 }

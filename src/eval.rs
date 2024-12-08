@@ -480,25 +480,28 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                         return eval_binary_op(&list, &mut current_env);
                     }
                     Object::Keyword(_keyword) => {
-                        return eval_keyword(&list, &mut current_env);
-                    }
-                    Object::If => {
-                        if list.len() != 4 {
-                            return Err("Invalid number of arguments for if statement".to_string());
-                        }
+                        if _keyword == "if" {
+                            if list.len() != 4 {
+                                return Err(
+                                    "Invalid number of arguments for if statement".to_string()
+                                );
+                            }
 
-                        let cond_obj = eval_obj(&list[1], &mut current_env)?;
-                        let cond = match cond_obj {
-                            Object::Bool(b) => b,
-                            _ => return Err("Condition must be a boolean".to_string()),
-                        };
+                            let cond_obj = eval_obj(&list[1], &mut current_env)?;
+                            let cond = match cond_obj {
+                                Object::Bool(b) => b,
+                                _ => return Err("Condition must be a boolean".to_string()),
+                            };
 
-                        if cond {
-                            current_obj = Box::new(list[2].clone());
+                            if cond {
+                                current_obj = Box::new(list[2].clone());
+                            } else {
+                                current_obj = Box::new(list[3].clone());
+                            }
+                            continue;
                         } else {
-                            current_obj = Box::new(list[3].clone());
+                            return eval_keyword(&list, &mut current_env);
                         }
-                        continue;
                     }
                     Object::Lambda(params, body, func_env) => {
                         let new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
