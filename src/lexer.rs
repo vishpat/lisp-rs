@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use std::error::Error;
+use std::str::Chars;
 use std::{fmt, vec};
 
 #[derive(Debug, Clone, PartialEq)]
@@ -28,75 +29,132 @@ impl fmt::Display for TokenError {
     }
 }
 
-pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
-    let keywords: HashSet<&str> = vec![
-        "define", "list", "print", "lambda", "map", "filter", "reduce", "range", "car", "cdr",
-        "length", "null?", "begin", "let", "if",
-    ]
-    .into_iter()
-    .collect::<HashSet<&str>>();
+struct Tokenizer<'a> {
+    input: Chars<'a>,
+    current_char: Option<char>,
+    keywords: HashSet<&'a str>,
+    binary_ops: HashSet<char>,
+}
 
-    let binary_ops: HashSet<&str> = vec!["+", "-", "*", "/", "%", "<", ">", "=", "!="]
+impl<'a> Tokenizer<'a> {
+    pub fn new(input: &'a str) -> Self {
+        let mut chars = input.chars();
+        let current_char = chars.next();
+
+        let keywords: HashSet<&str> = vec![
+            "define", "list", "print", "lambda", "map", "filter", "reduce", "range", "car", "cdr",
+            "length", "null?", "begin", "let", "if",
+        ]
         .into_iter()
         .collect::<HashSet<&str>>();
 
-    let mut tokens = Vec::new();
-    let mut chars = input.chars().collect::<Vec<char>>();
+        let binary_ops: HashSet<char> = vec!['+', '-', '*', '/', '%', '<', '>', '=', '|', '&']
+            .into_iter()
+            .collect::<HashSet<char>>();
 
-    if chars.is_empty() {
-        return Ok(tokens);
+        Tokenizer {
+            input: chars,
+            current_char,
+            keywords,
+            binary_ops,
+        }
     }
 
-    while !chars.is_empty() {
-        let mut ch = chars.remove(0);
-        match ch {
-            '(' => tokens.push(Token::LParen),
-            ')' => tokens.push(Token::RParen),
-            '"' => {
-                let mut word = String::new();
-                while !chars.is_empty() && chars[0] != '"' {
-                    word.push(chars.remove(0));
-                }
+    fn advance(&mut self) -> Option<char> {
+        self.current_char = self.input.next();
+        self.current_char
+    }
 
-                if !chars.is_empty() && chars[0] == '"' {
-                    chars.remove(0);
-                } else {
-                    return Err(TokenError {
-                        err: format!("Unterminated string: {}", word),
-                    });
-                }
-
-                tokens.push(Token::String(word));
+    fn eat_whitespace(&mut self) {
+        while let Some(c) = self.current_char {
+            if !c.is_whitespace() {
+                break;
             }
-            _ => {
-                let mut word = String::new();
-                while !chars.is_empty() && !ch.is_whitespace() && ch != '(' && ch != ')' {
-                    word.push(ch);
-                    let peek = chars[0];
-                    if peek == '(' || peek == ')' {
-                        break;
-                    }
-
-                    ch = chars.remove(0);
-                }
-
-                if !word.is_empty() {
-                    tokens.push(if let Ok(i) = word.parse::<i64>() {
-                        Token::Integer(i)
-                    } else if let Ok(f) = word.parse::<f64>() {
-                        Token::Float(f)
-                    } else if word == "if" {
-                        Token::If
-                    } else if binary_ops.contains(word.as_str()) || word == "or" || word == "and" {
-                        Token::BinaryOp(word)
-                    } else if keywords.contains(word.as_str()) {
-                        Token::Keyword(word)
-                    } else {
-                        Token::Symbol(word)
-                    });
-                }
-            }
+            self.advance();
         }
+    }
+
+    fn read_symbol(&mut self) -> String {
+        let mut symbol = String::new();
+        while let Some(c) = self.current_char {
+            if c.is_whitespace() || c == '(' || c == ')' || c == '\'' {
+                break;
+            }
+            symbol.push(c);
+            self.advance();
+        }
+        symbol
+    }
+
+    fn read_number(&mut self) -> String {
+        let mut number = String::new();
+        while let Some(c) = self.current_char {
+            if !c.is_numeric() && c != '.' {
+                break;
+            }
+            number.push(c);
+            self.advance();
+        }
+        number
+    }
+
+    fn read_string(&mut self) -> String {
+        let mut string = String::new();
+        self.advance(); // Skip the opening quote
+        while let Some(c) = self.current_char {
+            if c == '"' {
+                self.advance(); // Skip the closing quote
+                break;
+            }
+            string.push(c);
+            self.advance();
+        }
+        string
+    }
+
+    pub fn next_token(&mut self) -> Option<Token> {
+        self.eat_whitespace();
+
+        match self.current_char? {
+            '(' => {
+                self.advance();
+                Some(Token::LParen)
+            }
+            ')' => {
+                self.advance();
+                Some(Token::RParen)
+            }
+            '"' => Some(Token::String(self.read_string())),
+            c if c.is_numeric() => {
+                let val = self.read_number();
+                if val.contains('.') {
+                    Some(Token::Float(val.parse().unwrap()))
+                } else {
+                    Some(Token::Integer(val.parse().unwrap()))
+                }
+            }
+            c if c.is_alphabetic() || self.binary_ops.contains(&c) => {
+                let sym = self.read_symbol();
+                if sym == "if" {
+                    Some(Token::If)
+                } else if self.keywords.contains(sym.as_str()) {
+                    Some(Token::Keyword(sym))
+                } else if self.binary_ops.contains(&sym.chars().next().unwrap()) {
+                    Some(Token::BinaryOp(sym))
+                } else {
+                    Some(Token::Symbol(sym))
+                }
+            }
+            _ => None,
+        }
+    }
+}
+
+pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
+    let mut tokenizer = Tokenizer::new(input);
+    let mut tokens = Vec::new();
+    while let Some(token) = tokenizer.next_token() {
+        tokens.push(token);
     }
 
     Ok(tokens)

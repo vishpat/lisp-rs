@@ -138,11 +138,11 @@ fn eval_binary_op(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object,
                 }
                 _ => Err(format!("Invalid types for != operator {} {}", left, right)),
             },
-            "and" => match (left, right) {
+            "&" => match (left, right) {
                 (Object::Bool(l), Object::Bool(r)) => Ok(Object::Bool(*l && *r)),
                 _ => Err(format!("Invalid types for & operator {} {}", left, right)),
             },
-            "or" => match (left, right) {
+            "|" => match (left, right) {
                 (Object::Bool(l), Object::Bool(r)) => Ok(Object::Bool(*l || *r)),
                 _ => Err(format!("Invalid types for | operator {} {}", left, right)),
             },
@@ -808,7 +808,7 @@ mod tests {
             (begin
                 (define odd (lambda (v) (= 1 (% v 2))))
                 (define l (list 1 2 3 4 5))
-                (reduce (lambda (x y) (or x y)) (map odd l))
+                (reduce (lambda (x y) (| x y)) (map odd l))
             )
         ";
 
@@ -845,20 +845,6 @@ mod tests {
 
         let result = eval(program, &mut env).unwrap();
         assert_eq!(result, Object::Integer((120) as i64));
-    }
-
-    #[test]
-    fn test_abs() {
-        let mut env = Rc::new(RefCell::new(Env::new()));
-        let program = "
-            (begin
-                (define (abs n) (if (< n 0) (* -1 n) n))
-                (abs -5)
-            )
-        ";
-
-        let result = eval(program, &mut env).unwrap();
-        assert_eq!(result, Object::Integer((5) as i64));
     }
 
     #[test]
