@@ -4,14 +4,14 @@ use std::fmt;
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Integer(i64),
+    Symbol(String),
+    LParen,
+    RParen,
     Float(f64),
     String(String),
     BinaryOp(String),
     Keyword(String),
-    Symbol(String),
     If,
-    LParen,
-    RParen,
 }
 
 impl fmt::Display for Token {
@@ -20,12 +20,12 @@ impl fmt::Display for Token {
         f.write_str(
             (match self {
                 Integer(n) => format!("{}", n),
-                Float(n) => format!("{}", n),
-                BinaryOp(s) => format!("{}", s),
-                String(s) => format!("{}", s),
                 Symbol(s) => format!("{}", s),
                 LParen => format!("("),
                 RParen => format!(")"),
+                Float(n) => format!("{}", n),
+                BinaryOp(s) => format!("{}", s),
+                String(s) => format!("{}", s),
                 If => format!("if"),
                 Keyword(s) => format!("{}", s),
             })
