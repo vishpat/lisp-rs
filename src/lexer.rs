@@ -14,26 +14,6 @@ pub enum Token {
     If,
 }
 
-impl fmt::Display for Token {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use Token::*;
-        f.write_str(
-            (match self {
-                Integer(n) => format!("{}", n),
-                Symbol(s) => s.to_string(),
-                LParen => "(".to_string(),
-                RParen => ")".to_string(),
-                Float(n) => format!("{}", n),
-                BinaryOp(s) => s.to_string(),
-                String(s) => s.to_string(),
-                If => "if".to_string(),
-                Keyword(s) => s.to_string(),
-            })
-            .as_str(),
-        )
-    }
-}
-
 #[derive(Debug)]
 pub struct TokenError {
     err: String,
