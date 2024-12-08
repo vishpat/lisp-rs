@@ -52,8 +52,8 @@ fn eval_length(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, St
 fn eval_is_null(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let obj = eval_obj(&list[1], env)?;
     match obj {
-        Object::List(list) => Ok(Object::Bool(list.len() == 0)),
-        Object::ListData(list) => Ok(Object::Bool(list.len() == 0)),
+        Object::List(list) => Ok(Object::Bool(list.is_empty())),
+        Object::ListData(list) => Ok(Object::Bool(list.is_empty())),
         _ => Err(format!("{} is not a list", obj)),
     }
 }
