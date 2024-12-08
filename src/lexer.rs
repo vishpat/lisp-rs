@@ -26,7 +26,7 @@ impl fmt::Display for Token {
                 Float(n) => format!("{}", n),
                 BinaryOp(s) => s.to_string(),
                 String(s) => s.to_string(),
-                If => format!("if"),
+                If => "if".to_string(),
                 Keyword(s) => s.to_string(),
             })
             .as_str(),
@@ -55,18 +55,18 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
         return Ok(tokens);
     }
 
-    while chars.len() > 0 {
+    while !chars.is_empty() {
         let mut ch = chars.remove(0);
         match ch {
             '(' => tokens.push(Token::LParen),
             ')' => tokens.push(Token::RParen),
             '"' => {
                 let mut word = String::new();
-                while chars.len() > 0 && chars[0] != '"' {
+                while !chars.is_empty() && chars[0] != '"' {
                     word.push(chars.remove(0));
                 }
 
-                if chars.len() > 0 && chars[0] == '"' {
+                if !chars.is_empty() && chars[0] == '"' {
                     chars.remove(0);
                 } else {
                     return Err(TokenError {
