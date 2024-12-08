@@ -20,14 +20,14 @@ impl fmt::Display for Token {
         f.write_str(
             (match self {
                 Integer(n) => format!("{}", n),
-                Symbol(s) => format!("{}", s),
-                LParen => format!("("),
-                RParen => format!(")"),
+                Symbol(s) => s.to_string(),
+                LParen => "(".to_string(),
+                RParen => ")".to_string(),
                 Float(n) => format!("{}", n),
-                BinaryOp(s) => format!("{}", s),
-                String(s) => format!("{}", s),
+                BinaryOp(s) => s.to_string(),
+                String(s) => s.to_string(),
                 If => format!("if"),
-                Keyword(s) => format!("{}", s),
+                Keyword(s) => s.to_string(),
             })
             .as_str(),
         )

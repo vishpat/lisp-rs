@@ -365,7 +365,7 @@ fn eval_filter(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, St
     for arg in args.iter() {
         let val = eval_obj(arg, env)?;
         let mut new_env = Rc::new(RefCell::new(Env::extend(func_env.clone())));
-        new_env.borrow_mut().set(&func_param, val.clone());
+        new_env.borrow_mut().set(func_param, val.clone());
         let new_body = body.clone();
         let result_obj = eval_obj(&Object::List(new_body), &mut new_env)?;
         let result = match result_obj {
@@ -448,25 +448,23 @@ fn eval_keyword(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, S
     let head = &list[0];
     match head {
         Object::Keyword(s) => match s.as_str() {
-            "define" => eval_define(&list, env),
-            "begin" => eval_begin(&list, env),
-            "let" => eval_let(&list, env),
-            "list" => eval_list_data(&list, env),
-            "print" => print_list(&list, env),
-            "lambda" => eval_function_definition(&list, env),
-            "map" => eval_map(&list, env),
-            "filter" => eval_filter(&list, env),
-            "reduce" => eval_reduce(&list, env),
-            "range" => eval_range(&list, env),
-            "car" => eval_car(&list, env),
-            "cdr" => eval_cdr(&list, env),
-            "length" => eval_length(&list, env),
-            "null?" => eval_is_null(&list, env),
+            "define" => eval_define(list, env),
+            "begin" => eval_begin(list, env),
+            "let" => eval_let(list, env),
+            "list" => eval_list_data(list, env),
+            "print" => print_list(list, env),
+            "lambda" => eval_function_definition(list, env),
+            "map" => eval_map(list, env),
+            "filter" => eval_filter(list, env),
+            "reduce" => eval_reduce(list, env),
+            "range" => eval_range(list, env),
+            "car" => eval_car(list, env),
+            "cdr" => eval_cdr(list, env),
+            "length" => eval_length(list, env),
+            "null?" => eval_is_null(list, env),
             _ => Err(format!("Unknown keyword: {}", s)),
         },
-        _ => {
-            return Err(format!("Invalid keyword: {}", head));
-        }
+        _ => Err(format!("Invalid keyword: {}", head)),
     }
 }
 
@@ -486,16 +484,16 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                     }
                     Object::If => {
                         if list.len() != 4 {
-                            return Err(format!("Invalid number of arguments for if statement"));
+                            return Err("Invalid number of arguments for if statement".to_string());
                         }
 
                         let cond_obj = eval_obj(&list[1], &mut current_env)?;
                         let cond = match cond_obj {
                             Object::Bool(b) => b,
-                            _ => return Err(format!("Condition must be a boolean")),
+                            _ => return Err("Condition must be a boolean".to_string()),
                         };
 
-                        if cond == true {
+                        if cond {
                             current_obj = Box::new(list[2].clone());
                         } else {
                             current_obj = Box::new(list[3].clone());
@@ -536,7 +534,7 @@ fn eval_obj(obj: &Object, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> 
                     _ => {
                         let mut new_list = Vec::new();
                         for obj in (*list).iter() {
-                            let result = eval_obj(&obj, &mut current_env)?;
+                            let result = eval_obj(obj, &mut current_env)?;
                             match result {
                                 Object::Void => {}
                                 _ => new_list.push(result),
