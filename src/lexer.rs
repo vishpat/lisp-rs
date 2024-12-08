@@ -1,5 +1,6 @@
+use std::collections::HashSet;
 use std::error::Error;
-use std::fmt;
+use std::{fmt, vec};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
@@ -28,6 +29,17 @@ impl fmt::Display for TokenError {
 }
 
 pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
+    let keywords: HashSet<&str> = vec![
+        "define", "list", "print", "lambda", "map", "filter", "reduce", "range", "car", "cdr",
+        "length", "null?", "begin", "let", "if", "or", "and",
+    ]
+    .into_iter()
+    .collect::<HashSet<&str>>();
+
+    let binary_ops: HashSet<&str> = vec!["+", "-", "*", "/", "%", "<", ">", "=", "!=", "or", "and"]
+        .into_iter()
+        .collect::<HashSet<&str>>();
+
     let mut tokens = Vec::new();
     let mut chars = input.chars().collect::<Vec<char>>();
 
@@ -73,17 +85,14 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
                         Token::Integer(i)
                     } else if let Ok(f) = word.parse::<f64>() {
                         Token::Float(f)
+                    } else if word == "if" {
+                        Token::If
+                    } else if binary_ops.contains(word.as_str()) {
+                        Token::BinaryOp(word)
+                    } else if keywords.contains(word.as_str()) {
+                        Token::Keyword(word)
                     } else {
-                        match word.as_str() {
-                            "define" | "list" | "print" | "lambda" | "map" | "filter"
-                            | "reduce" | "range" | "car" | "cdr" | "length" | "null?" | "begin"
-                            | "let" => Token::Keyword(word),
-                            "if" => Token::If,
-                            "+" | "-" | "*" | "/" | "%" | "<" | ">" | "=" | "!=" | "or" | "and" => {
-                                Token::BinaryOp(word)
-                            }
-                            _ => Token::Symbol(word),
-                        }
+                        Token::Symbol(word)
                     });
                 }
             }
