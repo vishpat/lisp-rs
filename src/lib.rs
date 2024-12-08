@@ -21,7 +21,7 @@ pub fn lisp_rs_eval(input: &str) -> String {
             for param in params {
                 res.push_str(&format!("{} ", param));
             }
-            res.push_str(")");
+            res.push(')');
             for expr in (*body).iter() {
                 res.push_str(&format!(" {}", expr));
             }
@@ -31,22 +31,22 @@ pub fn lisp_rs_eval(input: &str) -> String {
             let mut res = "(".to_string();
             for (i, obj) in (*list).iter().enumerate() {
                 if i > 0 {
-                    res.push_str(" ");
+                    res.push(' ');
                 }
                 res.push_str(&format!("{}", obj));
             }
-            res.push_str(")");
+            res.push(')');
             res
         }
         Ok(Object::ListData(list)) => {
             let mut res = "(".to_string();
             for (i, obj) in list.iter().enumerate() {
                 if i > 0 {
-                    res.push_str(" ");
+                    res.push(' ');
                 }
                 res.push_str(&format!("{}", obj));
             }
-            res.push_str(")");
+            res.push(')');
             res.to_string()
         }
         Ok(Object::String(s)) => s.to_string(),
