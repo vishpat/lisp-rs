@@ -218,7 +218,7 @@ fn eval_define(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, St
             };
             let params = Object::List(Rc::new(l[1..].to_vec()));
             let body = list[2].clone();
-            let lambda = eval_function_definition(&vec![Object::Void, params, body], env)?;
+            let lambda = eval_function_definition(&[Object::Void, params, body], env)?;
             env.borrow_mut().set(&name, lambda);
             return Ok(Object::Void);
         }

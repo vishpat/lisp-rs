@@ -78,7 +78,7 @@ pub fn tokenize(input: &str) -> Result<Vec<Token>, TokenError> {
             }
             _ => {
                 let mut word = String::new();
-                while chars.len() > 0 && !ch.is_whitespace() && ch != '(' && ch != ')' {
+                while !chars.is_empty() && !ch.is_whitespace() && ch != '(' && ch != ')' {
                     word.push(ch);
                     let peek = chars[0];
                     if peek == '(' || peek == ')' {

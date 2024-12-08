@@ -41,9 +41,9 @@ fn parse_list(tokens: &mut Vec<Token>) -> Result<Object, ParseError> {
     let mut list: Vec<Object> = Vec::new();
     while !tokens.is_empty() {
         let token = tokens.pop();
-        if token == None {
+        if token.is_none() {
             return Err(ParseError {
-                err: format!("Did not find enough tokens"),
+                err: "Did not find enough tokens".to_string(),
             });
         }
         let t = token.unwrap();
