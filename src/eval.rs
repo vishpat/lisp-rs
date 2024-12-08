@@ -60,7 +60,7 @@ fn eval_is_null(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, S
 
 fn eval_binary_op(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
-        return Err(format!("Invalid number of arguments for infix operator"));
+        return Err("Invalid number of arguments for infix operator".to_string());
     }
     let operator = list[0].clone();
     let left = &eval_obj(&list[1].clone(), env)?;
@@ -72,7 +72,7 @@ fn eval_binary_op(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object,
                 (Object::Float(l), Object::Float(r)) => Ok(Object::Float(l + r)),
                 (Object::Integer(l), Object::Float(r)) => Ok(Object::Float(*l as f64 + r)),
                 (Object::Float(l), Object::Integer(r)) => Ok(Object::Float(l + *r as f64)),
-                (Object::String(l), Object::String(r)) => Ok(Object::String(l.to_owned() + &*r)),
+                (Object::String(l), Object::String(r)) => Ok(Object::String(l.to_owned() + r)),
                 _ => Err(format!("Invalid types for + operator {} {}", left, right)),
             },
             "-" => match (left, right) {
@@ -109,7 +109,7 @@ fn eval_binary_op(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object,
                 (Object::Integer(l), Object::Float(r)) => Ok(Object::Bool((*l as f64) < *r)),
                 (Object::Float(l), Object::Integer(r)) => Ok(Object::Bool(l < &(*r as f64))),
                 (Object::String(l), Object::String(r)) => {
-                    Ok(Object::Bool(l.cmp(&r) == Ordering::Less))
+                    Ok(Object::Bool(l.cmp(r) == Ordering::Less))
                 }
                 _ => Err(format!("Invalid types for < operator {} {}", left, right)),
             },
@@ -119,7 +119,7 @@ fn eval_binary_op(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object,
                 (Object::Integer(l), Object::Float(r)) => Ok(Object::Bool(*l as f64 > *r)),
                 (Object::Float(l), Object::Integer(r)) => Ok(Object::Bool(l > &(*r as f64))),
                 (Object::String(l), Object::String(r)) => {
-                    Ok(Object::Bool(l.cmp(&r) == Ordering::Greater))
+                    Ok(Object::Bool(l.cmp(r) == Ordering::Greater))
                 }
                 _ => Err(format!("Invalid types for > operator {} {}", left, right)),
             },
@@ -134,7 +134,7 @@ fn eval_binary_op(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object,
                 (Object::Integer(l), Object::Float(r)) => Ok(Object::Bool(*l as f64 != *r)),
                 (Object::Float(l), Object::Integer(r)) => Ok(Object::Bool(*l != (*r) as f64)),
                 (Object::String(l), Object::String(r)) => {
-                    Ok(Object::Bool(l.cmp(&r) != Ordering::Equal))
+                    Ok(Object::Bool(l.cmp(r) != Ordering::Equal))
                 }
                 _ => Err(format!("Invalid types for != operator {} {}", left, right)),
             },
@@ -148,7 +148,7 @@ fn eval_binary_op(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object,
             },
             _ => Err(format!("Invalid infix operator: {}", s)),
         },
-        _ => Err(format!("Operator must be a symbol")),
+        _ => Err("Operator must be a symbol".to_string()),
     }
 }
 
