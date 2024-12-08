@@ -5,7 +5,7 @@ use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::rc::Rc;
 
-fn print_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn print_list(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let mut new_list = Vec::new();
 
     for obj in list[1..].iter() {
@@ -14,11 +14,11 @@ fn print_list(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, 
     for obj in new_list.iter() {
         print!("{} ", obj);
     }
-    println!("");
+    println!();
     Ok(Object::Void)
 }
 
-fn eval_car(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_car(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let l = eval_obj(&list[1], env)?;
     match l {
         Object::ListData(list) => Ok(list[0].clone()),
@@ -26,7 +26,7 @@ fn eval_car(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
     }
 }
 
-fn eval_cdr(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_cdr(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let l = eval_obj(&list[1], env)?;
     let mut new_list = vec![];
     match l {
@@ -40,7 +40,7 @@ fn eval_cdr(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
     }
 }
 
-fn eval_length(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_length(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let obj = eval_obj(&list[1], env)?;
     match obj {
         Object::List(list) => Ok(Object::Integer(list.len() as i64)),
@@ -49,7 +49,7 @@ fn eval_length(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     }
 }
 
-fn eval_is_null(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_is_null(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let obj = eval_obj(&list[1], env)?;
     match obj {
         Object::List(list) => Ok(Object::Bool(list.len() == 0)),
@@ -58,7 +58,7 @@ fn eval_is_null(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object
     }
 }
 
-fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_binary_op(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for infix operator"));
     }
@@ -152,7 +152,7 @@ fn eval_binary_op(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
     }
 }
 
-fn eval_begin(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_begin(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let mut result = Object::Void;
     let mut new_env = Rc::new(RefCell::new(Env::extend(env.clone())));
 
@@ -162,7 +162,7 @@ fn eval_begin(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, 
     Ok(result)
 }
 
-fn eval_let(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_let(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let mut result = Object::Void;
     let bindings_env = Rc::new(RefCell::new(Env::new()));
 
@@ -204,7 +204,7 @@ fn eval_let(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
     Ok(result)
 }
 
-fn eval_define(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_define(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for define"));
     }
@@ -229,7 +229,7 @@ fn eval_define(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     Ok(Object::Void)
 }
 
-fn eval_list_data(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_list_data(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let mut new_list = Vec::new();
 
     for obj in list[1..].iter() {
@@ -238,7 +238,7 @@ fn eval_list_data(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Obje
     Ok(Object::ListData(new_list))
 }
 
-fn eval_range(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_range(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 && list.len() != 4 {
         return Err(format!("Invalid number of arguments for range"));
     }
@@ -273,10 +273,7 @@ fn eval_range(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, 
     Ok(Object::ListData(new_list))
 }
 
-fn eval_function_definition(
-    list: &Vec<Object>,
-    env: &mut Rc<RefCell<Env>>,
-) -> Result<Object, String> {
+fn eval_function_definition(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let params = match &list[1] {
         Object::List(list) => {
             let mut params = Vec::new();
@@ -298,7 +295,7 @@ fn eval_function_definition(
     Ok(Object::Lambda(params, Rc::new(body.to_vec()), env.clone()))
 }
 
-fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_map(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for map {:?}", list));
     }
@@ -337,7 +334,7 @@ fn eval_map(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, St
     Ok(Object::ListData(result_list))
 }
 
-fn eval_filter(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_filter(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for filter {:?}", list));
     }
@@ -382,7 +379,7 @@ fn eval_filter(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object,
     Ok(Object::ListData(result_list))
 }
 
-fn eval_reduce(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_reduce(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     if list.len() != 3 {
         return Err(format!("Invalid number of arguments for reduce {:?}", list));
     }
@@ -449,7 +446,7 @@ fn eval_symbol(s: &str, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     Ok(val.unwrap().clone())
 }
 
-fn eval_keyword(list: &Vec<Object>, env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+fn eval_keyword(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let head = &list[0];
     match head {
         Object::Keyword(s) => match s.as_str() {
