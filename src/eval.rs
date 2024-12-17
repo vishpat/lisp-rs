@@ -18,6 +18,23 @@ fn print_list(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, Str
     Ok(Object::Void)
 }
 
+fn eval_cons(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
+    if list.len() != 3 {
+        return Err("Invalid number of arguments for cons".to_string());
+    }
+
+    let head = eval_obj(&list[1], env)?;
+    let tail = eval_obj(&list[2], env)?;
+
+    match tail {
+        Object::ListData(mut l) => {
+            l.insert(0, head);
+            Ok(Object::ListData(l))
+        }
+        _ => Err(format!("{} is not a list", tail)),
+    }
+}
+
 fn eval_car(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, String> {
     let l = eval_obj(&list[1], env)?;
     match l {
@@ -214,7 +231,7 @@ fn eval_define(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, St
         Object::List(l) => {
             let name = match &l[0] {
                 Object::Symbol(s) => s.clone(),
-                _ => return Err("Invalid symbol for define".to_string()),
+                _ => return Err(format!("Invalid define {:?}", l)),
             };
             let params = Object::List(Rc::new(l[1..].to_vec()));
             let body = list[2].clone();
@@ -327,6 +344,7 @@ fn eval_keyword(list: &[Object], env: &mut Rc<RefCell<Env>>) -> Result<Object, S
             "list" => eval_list_data(list, env),
             "print" => print_list(list, env),
             "lambda" => eval_function_definition(list, env),
+            "cons" => eval_cons(list, env),
             "car" => eval_car(list, env),
             "cdr" => eval_cdr(list, env),
             "length" => eval_length(list, env),
@@ -950,5 +968,93 @@ mod tests {
 
         let result = eval(program, &mut env).unwrap();
         assert_eq!(result, Object::Integer(35));
+    }
+
+    #[test]
+    fn test_map() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (begin
+            (define (map f l)
+                (if (null? l) 
+                    (list) 
+                    (cons (f (car l)) (map f (cdr l)))))
+            (map (lambda (x) (* x x)) (list 1 2 3 4 5))
+        )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::ListData(vec![
+                Object::Integer(1),
+                Object::Integer(4),
+                Object::Integer(9),
+                Object::Integer(16),
+                Object::Integer(25),
+            ])
+        );
+    }
+
+    #[test]
+    fn test_filter() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (begin
+            (define (filter f l)
+                (if (null? l) 
+                    (list) 
+                    (if (f (car l)) 
+                        (cons (car l) (filter f (cdr l))) 
+                        (filter f (cdr l)))))
+            (filter (lambda (x) (> x 2)) (list 1 2 3 4 5))
+        )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(
+            result,
+            Object::ListData(vec![
+                Object::Integer(3),
+                Object::Integer(4),
+                Object::Integer(5),
+            ])
+        );
+    }
+
+    #[test]
+    fn test_fold_left() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (begin
+            (define (fold-left f acc l)
+                (if (null? l) 
+                    acc 
+                    (fold-left f (f acc (car l)) (cdr l))))
+            (fold-left (lambda (acc x) (+ acc x)) 0 (list 1 2 3 4 5))
+        )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(result, Object::Integer(15));
+    }
+
+    #[test]
+    fn test_reduce() {
+        let mut env = Rc::new(RefCell::new(Env::new()));
+        let program = "
+        (begin
+            (define (reduce f l)
+                (if (null? l) 
+                    (list) 
+                    (if (null? (cdr l)) 
+                        (car l) 
+                        (f (car l) (reduce f (cdr l))))))
+            (reduce (lambda (x y) (+ x y)) (list 1 2 3 4 5))
+        )
+        ";
+
+        let result = eval(program, &mut env).unwrap();
+        assert_eq!(result, Object::Integer(15));
     }
 }
