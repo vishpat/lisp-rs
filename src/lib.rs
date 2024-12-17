@@ -56,35 +56,3 @@ pub fn lisp_rs_eval(input: &str) -> String {
         Err(e) => e.to_string(),
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_map() {
-        let program = "
-            (map (lambda (x) (* x x)) (list 1 2 3 4 5))
-        ";
-        let result = lisp_rs_eval(program);
-        assert_eq!(result, "(1 4 9 16 25)");
-    }
-
-    #[test]
-    fn test_filter() {
-        let program = "
-            (filter (lambda (x) (= 0 (% x 2))) (list 1 2 3 4 5))
-        ";
-        let result = lisp_rs_eval(program);
-        assert_eq!(result, "(2 4)");
-    }
-
-    #[test]
-    fn test_reduce() {
-        let program = "
-            (reduce (lambda (x y) (+ x y)) (list 1 2 3 4 5))
-        ";
-        let result = lisp_rs_eval(program);
-        assert_eq!(result, "15");
-    }
-}

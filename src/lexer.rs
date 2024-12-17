@@ -42,7 +42,7 @@ impl<'a> Tokenizer<'a> {
 
         let keywords: HashSet<&str> = vec![
             "define", "list", "print", "lambda", "map", "filter", "reduce", "range", "car", "cdr",
-            "length", "null?", "begin", "let", "if",
+            "length", "null?", "begin", "let", "if", "else", "cond",
         ]
         .into_iter()
         .collect::<HashSet<&str>>();
