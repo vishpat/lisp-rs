@@ -31,7 +31,7 @@ For a detailed code-walkthrough about Phase-I implementation refer to the [docs]
 
 ## REPL
 ```
-cargo run --features="build-binary"
+cargo run
 ```
 
 ## Test
