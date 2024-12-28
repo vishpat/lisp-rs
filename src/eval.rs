@@ -612,13 +612,7 @@ fn eval_list(
     Object::Keyword(_) => eval_keyword(list, env),
     Object::BinaryOp(_) => eval_binary_op(list, env),
     Object::Symbol(s) => eval_function_call(s, list, env),
-    _ => {
-      let mut new_list = Vec::new();
-      for obj in list.iter() {
-        new_list.push(eval_obj(obj, env)?);
-      }
-      Ok(Object::List(Rc::new(new_list)))
-    }
+    _ =>  Err(format!("Invalid list op: {:?}", list))
   }
 }
 
