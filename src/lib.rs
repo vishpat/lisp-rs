@@ -16,7 +16,7 @@ pub fn lisp_rs_eval(input: &str) -> String {
     Ok(Object::Integer(n)) => n.to_string(),
     Ok(Object::Bool(b)) => b.to_string(),
     Ok(Object::Symbol(s)) => s.to_string(),
-    Ok(Object::Lambda(params, body, _)) => {
+    Ok(Object::Lambda(params, body)) => {
       let mut res = "Lambda(".to_string();
       for param in params {
         res.push_str(&format!("{} ", param));

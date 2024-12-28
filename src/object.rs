@@ -14,7 +14,7 @@ pub enum Object {
   String(String),
   Symbol(String),
   ListData(Vec<Object>),
-  Lambda(Vec<String>, Rc<Vec<Object>>, Rc<RefCell<Env>>),
+  Lambda(Vec<String>, Vec<Object>),
   List(Rc<Vec<Object>>),
 }
 
@@ -29,7 +29,7 @@ impl fmt::Display for Object {
       Object::Bool(b) => write!(f, "{}", b),
       Object::Symbol(s) => write!(f, "{}", s),
       Object::String(s) => write!(f, "{}", s),
-      Object::Lambda(params, body, _env) => {
+      Object::Lambda(params, body) => {
         write!(f, "Lambda(")?;
         for param in params {
           write!(f, "{} ", param)?;
