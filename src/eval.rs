@@ -829,7 +829,6 @@ mod tests {
 
   #[test]
   fn test_factorial() {
-    unsafe { backtrace_on_stack_overflow::enable() };
     let mut env = Rc::new(RefCell::new(Env::new()));
     let program = "
             (begin
