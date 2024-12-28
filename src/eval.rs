@@ -393,10 +393,11 @@ fn eval_define(
       };
       let params = Object::List(Rc::new(l[1..].to_vec()));
       let body = list[2].clone();
-      let lambda = eval_function_definition(
-        &[Object::Void, params, body],
-        env,
-      )?;
+      let lambda = eval_function_definition(&[
+        Object::Void,
+        params,
+        body,
+      ])?;
       env.borrow_mut().set(&name, lambda);
       return Ok(Object::Void);
     }
@@ -417,6 +418,32 @@ fn eval_list_data(
     new_list.push(eval_obj(obj, env)?);
   }
   Ok(Object::ListData(new_list))
+}
+
+fn eval_if(
+  list: &[Object],
+  env: &mut Rc<RefCell<Env>>,
+) -> Result<Object, String> {
+  if list.len() != 4 {
+    return Err(
+      "Invalid number of arguments for if statement"
+        .to_string(),
+    );
+  }
+
+  let cond_obj = eval_obj(&list[1], env)?;
+  let cond = match cond_obj {
+    Object::Bool(b) => b,
+    _ => {
+      return Err("Condition must be a boolean".to_string())
+    }
+  };
+
+  if cond {
+    eval_obj(&list[2], env)
+  } else {
+    eval_obj(&list[3], env)
+  }
 }
 
 fn eval_cond(
@@ -497,18 +524,14 @@ fn eval_function_call(
         let val = eval_obj(&list[i + 1], env)?;
         new_env.borrow_mut().set(param, val);
       }
-      return eval_obj(
-        &Object::List(body.into()),
-        &mut new_env,
-      );
+      eval_obj(&Object::List(body.into()), &mut new_env)
     }
-    _ => return Err(format!("Not a lambda: {}", s)),
+    _ => Err(format!("Not a lambda: {}", s)),
   }
 }
 
 fn eval_function_definition(
   list: &[Object],
-  env: &mut Rc<RefCell<Env>>,
 ) -> Result<Object, String> {
   let params = match &list[1] {
     Object::List(list) => {
@@ -566,13 +589,14 @@ fn eval_keyword(
       "let" => eval_let(list, env),
       "list" => eval_list_data(list, env),
       "print" => print_list(list, env),
-      "lambda" => eval_function_definition(list, env),
+      "lambda" => eval_function_definition(list),
       "cons" => eval_cons(list, env),
       "car" => eval_car(list, env),
       "cdr" => eval_cdr(list, env),
       "length" => eval_length(list, env),
       "null?" => eval_is_null(list, env),
       "cond" => eval_cond(list, env),
+      "if" => eval_if(list, env),
       _ => Err(format!("Unknown keyword: {}", s)),
     },
     _ => Err(format!("Invalid keyword: {}", head)),
