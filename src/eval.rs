@@ -429,13 +429,13 @@ fn eval_list(
   match head {
     Object::Keyword(_) => eval_keyword(list, env),
     Object::BinaryOp(_) => eval_binary_op(list, env),
-    Object::Symbol(_) => {
-      let lambda = eval_obj(head, env)?;
-      let mut new_list = vec![lambda];
-      new_list.extend_from_slice(&list[1..]);
-      eval_obj(&Object::List(new_list.into()), env)
+    _ => {
+      let mut new_list = Vec::new();
+      for obj in list.iter() {
+        new_list.push(eval_obj(obj, env)?);
+      }
+      Ok(Object::List(Rc::new(new_list)))
     }
-    _ => Err(format!("Invalid list head: {}", head)),
   }
 }
 
@@ -591,9 +591,7 @@ fn eval_obj(
     Object::Symbol(s) => eval_symbol(s, env),
     Object::Lambda(_, _, _) => Ok(Object::Void),
     Object::List(list) => eval_list(list, env),
-    _ => {
-      return Err(format!("Invalid object: {:?}", obj));
-    }
+    _ => Err(format!("Invalid object: {:?}", obj)),
   }
 }
 
