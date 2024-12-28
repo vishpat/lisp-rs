@@ -626,8 +626,6 @@ fn eval_obj(
   obj: &Object,
   env: &mut Rc<RefCell<Env>>,
 ) -> Result<Object, String> {
-  println!("eval_obj: {:?}", obj);
-
   match obj {
     Object::Void => Ok(Object::Void),
     Object::Bool(_) => Ok(obj.clone()),
