@@ -18,7 +18,8 @@ More information about the dialect can be found at
 
 ## Implementation
 
-For a detailed code-walkthrough about evaluator refer to the [docs](https://vishpat.github.io/lisp-rs). For code-walkthrough of all the phases, get the [e-book](https://www.amazon.com/dp/B0B1Z48DMT/ref=cm_sw_r_apan_QD16PC5E2EZWMKB1EZMK).
+For a detailed code-walkthrough about evaluator refer to the [docs](https://vishpat.github.io/lisp-rs). For code-walkthrough of all the phases, get the [book](
+https://www.amazon.com/dp/B0DS8XJJWY/ref=tmm_pap_swatch_0?_encoding=UTF8&qid=&sr=).
 
 [![asciicast](https://asciinema.org/a/VVQQfGpp15a4BaoNgnEKIqqrr.svg)](https://asciinema.org/a/VVQQfGpp15a4BaoNgnEKIqqrr)
 
